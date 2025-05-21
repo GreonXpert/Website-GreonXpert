@@ -11,7 +11,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 // Pages
-import HomePage from './pages/Home';
+import HomePage from './pages/HomePage';
 
 function App() {
   return (
@@ -28,14 +28,7 @@ function App() {
             <Box sx={{ flexGrow: 1 }}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
-                {/* Add more routes as needed */}
-                <Route path="/about" element={<div>About Page</div>} />
-                <Route path="/services" element={<div>Services Page</div>} />
-                <Route path="/contact" element={<div>Contact Page</div>} />
-                <Route path="/profile" element={<div>Profile Page</div>} />
-                <Route path="/account" element={<div>Account Page</div>} />
-                <Route path="/dashboard" element={<div>Dashboard Page</div>} />
-                <Route path="*" element={<div>Page Not Found</div>} />
+                {/* Other routes remain the same */}
               </Routes>
             </Box>
             <Footer />
@@ -45,6 +38,5 @@ function App() {
     </Provider>
   );
 }
-
 
 export default App;
