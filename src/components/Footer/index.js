@@ -23,7 +23,7 @@ const Footer = () => {
         <Grid container spacing={4}>
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="h6" color="text.primary" gutterBottom>
-              WEBSITE
+              GreonXpert
             </Typography>
             <Typography variant="body2" color="text.secondary">
               A short description about your company and what you do. This helps visitors understand your mission.
@@ -103,13 +103,13 @@ const Footer = () => {
               Contact
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              123 Street Name, City, State
+              greonXpert Pvt Ltd. Kalamassery,Ernakulam Kerala, India
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Email: info@example.com
+              Email: info@greonXpert.com
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Phone: +1 (123) 456-7890
+              Phone: +91 77365 38040
             </Typography>
           </Grid>
         </Grid>
@@ -121,7 +121,7 @@ const Footer = () => {
           {new Date().getFullYear()}
           {' '}
           <Link color="inherit" href="/">
-            WEBSITE
+            GreonXpert
           </Link>
           {'. All rights reserved.'}
         </Typography>
