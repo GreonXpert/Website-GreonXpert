@@ -1,5 +1,5 @@
 // src/components/Navbar/index.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AppBar, 
   Box, 
@@ -21,6 +21,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
+import logo from '../../assests/logo/logo.png';
 
 // Define navigation pages
 const pages = ['Home'];
@@ -29,13 +30,22 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 10;
+      setScrolled(isScrolled);
+    };
 
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleCloseNavMenu = () => {
     setAnchorElNav(null);
   };
-
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -48,8 +58,6 @@ const Navbar = () => {
     const route = page.toLowerCase() === 'home' ? '/' : `/${page.toLowerCase().replace(/\s+/g, '-')}`;
     navigate(route);
   };
-
- 
 
   // Mobile drawer content
   const drawer = (
@@ -73,25 +81,43 @@ const Navbar = () => {
 
   return (
     <>
-      <AppBar position="static" color="default" elevation={0} sx={{ bgcolor: 'background.paper' }}>
+      {/* Spacing to prevent content from being hidden behind fixed navbar */}
+      <Box sx={{ height: { xs: '70px', md: '80px' } }} />
+
+      <AppBar 
+        position="fixed" 
+        elevation={scrolled ? 4 : 0}
+        sx={{ 
+          bgcolor: scrolled ? 'rgba(255, 255, 255, 0.95)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(10px)' : 'none',
+          borderBottom: scrolled ? '1px solid rgba(0, 0, 0, 0.12)' : 'none',
+          transition: 'all 0.3s ease-in-out',
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+        }}
+      >
         <Container maxWidth="xl">
           <Toolbar disableGutters>
             {/* Logo for desktop */}
-            <Typography
-              variant="h6"
-              noWrap
+            <Box
               component="a"
               href="/"
               sx={{
                 mr: 2,
                 display: { xs: 'none', md: 'flex' },
-                fontWeight: 700,
-                color: 'primary.main',
+                alignItems: 'center',
                 textDecoration: 'none',
               }}
             >
-              GeronXpert
-            </Typography>
+              <img 
+                src={logo} 
+                alt="GeronXpert Logo" 
+                style={{ 
+                  height: '40px', 
+                  width: 'auto',
+                  transition: 'all 0.3s ease-in-out'
+                }} 
+              />
+            </Box>
 
             {/* Mobile menu icon */}
             <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
@@ -101,29 +127,37 @@ const Navbar = () => {
                 aria-controls="menu-appbar"
                 aria-haspopup="true"
                 onClick={handleDrawerToggle}
-                color="inherit"
+                sx={{ 
+                  color: scrolled ? 'text.primary' : 'white',
+                  transition: 'color 0.3s ease-in-out'
+                }}
               >
                 <MenuIcon />
               </IconButton>
             </Box>
 
-            {/* Logo for mobile */}
-            <Typography
-              variant="h6"
-              noWrap
+            {/* Logo for mobile - smaller size */}
+            <Box
               component="a"
               href="/"
               sx={{
-                mr: 2,
                 display: { xs: 'flex', md: 'none' },
                 flexGrow: 1,
-                fontWeight: 700,
-                color: 'primary.main',
+                justifyContent: 'center',
+                alignItems: 'center',
                 textDecoration: 'none',
               }}
             >
-              GeronXpert
-            </Typography>
+              <img 
+                src={logo} 
+                alt="GeronXpert Logo" 
+                style={{ 
+                  height: '28px', 
+                  width: 'auto',
+                  transition: 'all 0.3s ease-in-out'
+                }} 
+              />
+            </Box>
 
             {/* Desktop navigation */}
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
@@ -131,14 +165,21 @@ const Navbar = () => {
                 <Button
                   key={page}
                   onClick={() => handleNavigation(page)}
-                  sx={{ my: 2, mx: 1, color: 'text.primary', display: 'block' }}
+                  sx={{ 
+                    my: 2, 
+                    mx: 1, 
+                    color: scrolled ? 'text.primary' : '', 
+                    display: 'block',
+                    transition: 'color 0.3s ease-in-out',
+                    '&:hover': {
+                      bgcolor: scrolled ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.1)',
+                    }
+                  }}
                 >
                   {page}
                 </Button>
               ))}
             </Box>
-
-            
           </Toolbar>
         </Container>
       </AppBar>

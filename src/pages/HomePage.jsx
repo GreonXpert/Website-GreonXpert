@@ -8,6 +8,7 @@ import ClimateIntelligence from '../components/Home/ClimateIntelligence';
 import PrecisionInAction from '../components/Home/PrecisionInAction';
 import RegulatoryReporting from '../components/Home/RegulatoryReporting';
 import AdvisoryBoard from '../components/Home/AdvisoryBoard';
+import SustainabilityStories from '../components/Home/SustainabilityStories';
 
 const HomePage = () => {
   return (
@@ -18,6 +19,7 @@ const HomePage = () => {
       <ClimateIntelligence/>
       <PrecisionInAction/>
       <RegulatoryReporting/>
+      <SustainabilityStories/>
       <AdvisoryBoard/>
       {/* Other sections will be added here later */}
     </Box>
