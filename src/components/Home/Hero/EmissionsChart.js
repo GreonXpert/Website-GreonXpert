@@ -66,6 +66,8 @@ const EmissionsChart = () => {
   const isTablet = windowSize.width >= 768 && windowSize.width < 1024;
   const isDesktop = windowSize.width >= 1024;
 
+  const containerWidth = isDesktop ? '40vw' : '100%';
+
   // Responsive values
   const fontSize = {
     title: isMobile ? '25px' : isTablet ? '32px' : '20px',
@@ -219,7 +221,7 @@ const EmissionsChart = () => {
     <div style={{
       padding: spacing.padding,
       height: '100%',
-      width: '100%',
+      width: containerWidth,
       backgroundColor: 'rgba(255, 255, 255, 0.05)',
       backdropFilter: 'blur(10px)',
       border: '1px solid rgba(255, 255, 255, 0.1)',
