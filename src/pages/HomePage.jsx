@@ -6,6 +6,8 @@ import TrustedByLeaders from '../components/Home/TrustedByLeaders/TrustedByLeade
 import PoweredByScience from '../components/Home/PoweredByScience';
 import ClimateIntelligence from '../components/Home/ClimateIntelligence';
 import PrecisionInAction from '../components/Home/PrecisionInAction';
+import RegulatoryReporting from '../components/Home/RegulatoryReporting';
+import AdvisoryBoard from '../components/Home/AdvisoryBoard';
 
 const HomePage = () => {
   return (
@@ -15,6 +17,8 @@ const HomePage = () => {
       <PoweredByScience/>
       <ClimateIntelligence/>
       <PrecisionInAction/>
+      <RegulatoryReporting/>
+      <AdvisoryBoard/>
       {/* Other sections will be added here later */}
     </Box>
   );
