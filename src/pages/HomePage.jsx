@@ -5,6 +5,7 @@ import Hero from '../components/Home/Hero/Hero';
 import TrustedByLeaders from '../components/Home/TrustedByLeaders/TrustedByLeaders';
 import PoweredByScience from '../components/Home/PoweredByScience';
 import ClimateIntelligence from '../components/Home/ClimateIntelligence';
+import PrecisionInAction from '../components/Home/PrecisionInAction';
 
 const HomePage = () => {
   return (
@@ -13,6 +14,7 @@ const HomePage = () => {
       <TrustedByLeaders/>
       <PoweredByScience/>
       <ClimateIntelligence/>
+      <PrecisionInAction/>
       {/* Other sections will be added here later */}
     </Box>
   );
