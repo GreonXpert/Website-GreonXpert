@@ -24,7 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../../assests/logo/logo.png';
 
 // Define navigation pages
-const pages = ['Home'];
+const pages = ['Home','Contact Us',];
 
 const Navbar = () => {
   const navigate = useNavigate();

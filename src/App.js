@@ -12,6 +12,7 @@ import Footer from './components/Footer';
 
 // Pages
 import HomePage from './pages/HomePage';
+import ContactPage from './pages/ContactPage';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Box sx={{ flexGrow: 1 }}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/contact-us" element={<ContactPage />} />
                 {/* Other routes remain the same */}
               </Routes>
             </Box>
