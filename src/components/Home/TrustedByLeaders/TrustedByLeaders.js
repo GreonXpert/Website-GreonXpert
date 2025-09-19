@@ -1,5 +1,5 @@
-// src/components/Home/TrustedByLeaders/index.js
 import React, { useState, useEffect } from 'react';
+import io from 'socket.io-client';
 import {
   Box,
   Container,
@@ -20,39 +20,84 @@ import BusinessIcon from '@mui/icons-material/Business';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import SecurityIcon from '@mui/icons-material/Security';
 import PublicIcon from '@mui/icons-material/Public';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import { API_BASE } from '../../../utils/api';
 
-// Floating animation
-const floatAnimation = keyframes`
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  33% { transform: translateY(-10px) rotate(1deg); }
-  66% { transform: translateY(-5px) rotate(-1deg); }
+// Glittering animation
+const glitterAnimation = keyframes`
+  0% { transform: scale(1) rotate(0deg); box-shadow: 0 0 0 rgba(255,255,255,0.4); }
+  25% { transform: scale(1.05) rotate(2deg); box-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 30px rgba(26, 201, 159, 0.4); }
+  50% { transform: scale(1.1) rotate(-1deg); box-shadow: 0 0 30px rgba(255,255,255,1), 0 0 40px rgba(26, 201, 159, 0.6); }
+  75% { transform: scale(1.05) rotate(1deg); box-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 30px rgba(26, 201, 159, 0.4); }
+  100% { transform: scale(1) rotate(0deg); box-shadow: 0 0 0 rgba(255,255,255,0.4); }
 `;
 
-// Pulse animation
-const pulseAnimation = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+// Sparkle animation
+const sparkleAnimation = keyframes`
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
 `;
 
-// Glow animation
-const glowAnimation = keyframes`
-  0%, 100% { box-shadow: 0 0 20px rgba(26, 201, 159, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(26, 201, 159, 0.6), 0 0 40px rgba(26, 201, 159, 0.4); }
+// Shine animation
+const shineAnimation = keyframes`
+  0% { left: -100%; }
+  100% { left: 100%; }
 `;
 
-// Shimmer animation
-const shimmerAnimation = keyframes`
-  0% { background-position: -200px 0; }
-  100% { background-position: calc(200px + 100%) 0; }
-`;
+const API_URL = `${API_BASE}`; // Use the imported API_BASE
 
 const TrustedByLeaders = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [visibleItems, setVisibleItems] = useState({});
+  const [partnerships, setPartnerships] = useState([]);
+  const [recognitions, setRecognitions] = useState([]);
+  
+  // Option to show/hide text when image is available
+  const showTextWithImage = false; // Set to true to show text even when image is present
 
   useEffect(() => {
+    // 1. Fetch initial data from the backend
+    const fetchData = async () => {
+      try {
+        const [partnershipsRes, recognitionsRes] = await Promise.all([
+          fetch(`${API_URL}/api/trusted/partnerships`),
+          fetch(`${API_URL}/api/trusted/recognitions`)
+        ]);
+        const partnershipsData = await partnershipsRes.json();
+        const recognitionsData = await recognitionsRes.json();
+
+        if (partnershipsData.success) {
+          setPartnerships(partnershipsData.data);
+        }
+        if (recognitionsData.success) {
+          setRecognitions(recognitionsData.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+      }
+    };
+
+    fetchData();
+
+    // 2. Set up socket for real-time updates
+    const socket = io(API_URL);
+
+    socket.on('partnerships-updated', (data) => {
+      if (data.success) {
+        console.log("Partnerships updated in real-time:", data.data);
+        setPartnerships(data.data);
+      }
+    });
+
+    socket.on('recognitions-updated', (data) => {
+      if (data.success) {
+        console.log("Recognitions updated in real-time:", data.data);
+        setRecognitions(data.data);
+      }
+    });
+    
+    // 3. Trigger animations
     const timer = setTimeout(() => {
       setVisibleItems({ partnerships: true });
     }, 300);
@@ -60,81 +105,27 @@ const TrustedByLeaders = () => {
     const timer2 = setTimeout(() => {
       setVisibleItems(prev => ({ ...prev, recognitions: true }));
     }, 600);
-
+    
+    // 4. Cleanup on component unmount
     return () => {
       clearTimeout(timer);
       clearTimeout(timer2);
+      socket.disconnect();
     };
   }, []);
-
-  const partnerships = [
-    {
-      id: 1,
-      name: "Eco Defenders 360",
-      description: "Environmental Solutions Consultancy",
-      icon: <SecurityIcon sx={{ fontSize: 40, color: theme.palette.primary.main }} />,
-      color: theme.palette.primary.main,
-    },
-    {
-      id: 2,
-      name: "Klimate Shield",
-      description: "Climate Risk Management Experts",
-      icon: <PublicIcon sx={{ fontSize: 40, color: theme.palette.secondary.main }} />,
-      color: theme.palette.secondary.main,
-    }
-  ];
-
-  const recognitions = [
-    {
-      id: 1,
-      name: "DPIIT",
-      fullName: "Department for Promotion of Industry and Internal Trade",
-      icon: <BusinessIcon sx={{ fontSize: 32 }} />,
-      color: '#FF6B35',
-    },
-    {
-      id: 2,
-      name: "Startup Mission",
-      fullName: "Government Startup Initiative",
-      icon: <EmojiEventsIcon sx={{ fontSize: 32 }} />,
-      color: '#4ECDC4',
-    },
-    {
-      id: 3,
-      name: "Udhyam",
-      fullName: "Entrepreneurship Development Program",
-      icon: <VerifiedIcon sx={{ fontSize: 32 }} />,
-      color: '#45B7D1',
-    }
-  ];
 
   return (
     <Box
       sx={{
-        py: { xs: 8, md: 12 },
-        background: `linear-gradient(135deg, 
-          ${theme.palette.background.default} 0%, 
-          rgba(26, 201, 159, 0.02) 25%,
-          rgba(46, 139, 139, 0.02) 75%,
-          ${theme.palette.background.default} 100%)`,
+        py: { xs: 6, md: 8 }, // Increased for better spacing
         position: 'relative',
         overflow: 'hidden',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'radial-gradient(circle at 20% 80%, rgba(26, 201, 159, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(46, 139, 139, 0.1) 0%, transparent 50%)',
-          pointerEvents: 'none',
-        }
       }}
     >
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
         {/* Main Title */}
         <Fade in timeout={800}>
-          <Box textAlign="center" mb={8}>
+          <Box textAlign="center" mb={8}> {/* Increased margin */}
             <Typography
               variant="h2"
               component="h2"
@@ -145,11 +136,12 @@ const TrustedByLeaders = () => {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 mb: 2,
-                fontSize: { xs: '2rem', md: '3rem' },
+                fontSize: { xs: '1.8rem', md: '2.5rem' },
                 textAlign: 'center',
+                lineHeight: 1.2, // Better line spacing
               }}
             >
-              Trusted by Leaders
+              PREFERRED CHOICE OF LEADING EXPERTS
             </Typography>
             <Typography
               variant="h6"
@@ -157,17 +149,19 @@ const TrustedByLeaders = () => {
               sx={{
                 maxWidth: '600px',
                 mx: 'auto',
-                fontSize: { xs: '1rem', md: '1.25rem' },
+                fontSize: { xs: '0.9rem', md: '1.1rem' },
+                opacity: 0.8,
+                lineHeight: 1.5,
               }}
             >
-              Building tomorrow's sustainable solutions with industry pioneers and government recognition
+              Building sustainable solutions with trusted partners and government recognition
             </Typography>
           </Box>
         </Fade>
 
         {/* Partnership Section */}
         <Grow in={visibleItems.partnerships} timeout={1000}>
-          <Box mb={8}>
+          <Box mb={8}> {/* Increased margin */}
             <Typography
               variant="h4"
               component="h3"
@@ -176,6 +170,7 @@ const TrustedByLeaders = () => {
                 mb: 4,
                 fontWeight: 600,
                 color: theme.palette.text.primary,
+                fontSize: { xs: '1.5rem', md: '2rem' },
                 position: 'relative',
                 '&::after': {
                   content: '""',
@@ -195,77 +190,104 @@ const TrustedByLeaders = () => {
             
             <Grid container spacing={4} justifyContent="center">
               {partnerships.map((partner, index) => (
-                <Grid item xs={12} md={6} key={partner.id}>
+                <Grid item xs={12} md={6} key={partner._id}>
                   <Zoom in timeout={1200 + index * 200}>
-                    <Card
+                    <Box
                       sx={{
                         height: '100%',
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        borderRadius: 4,
-                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        animation: `${floatAnimation} 6s ease-in-out infinite`,
-                        animationDelay: `${index * 0.5}s`,
-                        '&::before': {
-                          content: '""',
-                          position: 'absolute',
-                          top: 0,
-                          left: '-200px',
-                          width: '200px',
-                          height: '100%',
-                          background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)`,
-                          animation: `${shimmerAnimation} 3s infinite`,
-                          animationDelay: `${index * 1}s`,
-                        },
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                        transition: 'all 0.4s ease',
+                        cursor: 'pointer',
+                        p: 3,
+                        borderRadius: 3,
                         '&:hover': {
-                          transform: 'translateY(-10px) scale(1.02)',
-                          animation: `${glowAnimation} 2s ease-in-out infinite`,
-                          '& .partner-icon': {
-                            animation: `${pulseAnimation} 1s ease-in-out infinite`,
+                          transform: 'translateY(-8px)',
+                          '& .partner-image': {
+                            animation: `${glitterAnimation} 1.5s ease-in-out`,
                           }
                         }
                       }}
                     >
-                      <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                        <Box
-                          className="partner-icon"
-                          sx={{
-                            mb: 2,
-                            p: 2,
-                            borderRadius: '50%',
-                            background: `linear-gradient(135deg, ${partner.color}15, ${partner.color}25)`,
-                            display: 'inline-block',
-                            border: `2px solid ${partner.color}30`,
-                          }}
-                        >
-                          {partner.icon}
-                        </Box>
-                        <Typography
-                          variant="h5"
-                          component="h4"
-                          sx={{
-                            fontWeight: 700,
-                            mb: 1,
-                            background: `linear-gradient(45deg, ${partner.color}, ${partner.color}AA)`,
-                            backgroundClip: 'text',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                          }}
-                        >
-                          {partner.name}
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          color="text.secondary"
-                          sx={{ fontWeight: 500 }}
-                        >
-                          {partner.description}
-                        </Typography>
-                      </CardContent>
-                    </Card>
+                      {partner.imageUrl ? (
+                        <>
+                          <Box
+                            className="partner-image"
+                            sx={{
+                              mb: showTextWithImage ? 2 : 0,
+                              borderRadius: 3,
+                              overflow: 'hidden',
+                              transition: 'all 0.4s ease',
+                              position: 'relative',
+                              '&::before': {
+                                content: '""',
+                                position: 'absolute',
+                                top: 0,
+                                left: '-100%',
+                                width: '100%',
+                                height: '100%',
+                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)',
+                                transition: 'all 0.6s ease',
+                                zIndex: 1,
+                              },
+                              '&:hover::before': {
+                                left: '100%',
+                              }
+                            }}
+                          >
+                            <img
+                              src={`${API_URL}${partner.imageUrl}`}
+                              alt={partner.name}
+                              style={{
+                                width: '100%',
+                                maxWidth: '200px',
+                                height: 'auto',
+                                display: 'block',
+                                borderRadius: '12px',
+                                transition: 'all 0.4s ease',
+                                position: 'relative',
+                                zIndex: 0,
+                              }}
+                            />
+                          </Box>
+                          
+                          {showTextWithImage && (
+                            <>
+                              <Typography
+                                variant="h6"
+                                component="h4"
+                                sx={{
+                                  fontWeight: 700,
+                                  mb: 1,
+                                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.main}AA)`,
+                                  backgroundClip: 'text',
+                                  WebkitBackgroundClip: 'text',
+                                  WebkitTextFillColor: 'transparent',
+                                }}
+                              >
+                                {partner.name}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ fontWeight: 500 }}
+                              >
+                                {partner.description}
+                              </Typography>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h6">{partner.name}</Typography>
+                            </CardContent>
+                        </Card>
+                      )}
+                    </Box>
                   </Zoom>
                 </Grid>
               ))}
@@ -281,9 +303,10 @@ const TrustedByLeaders = () => {
               component="h3"
               sx={{
                 textAlign: 'center',
-                mb: 4,
+                mb: 5,
                 fontWeight: 600,
                 color: theme.palette.text.primary,
+                fontSize: { xs: '1.5rem', md: '2rem' },
                 position: 'relative',
                 '&::after': {
                   content: '""',
@@ -301,60 +324,126 @@ const TrustedByLeaders = () => {
               Recognized by
             </Typography>
             
-            <Grid container spacing={3} justifyContent="center">
+            <Grid container spacing={3} justifyContent="center" alignItems="center">
               {recognitions.map((recognition, index) => (
-                <Grid item xs={12} sm={6} md={4} key={recognition.id}>
+                <Grid item xs={12} sm={6} md={3} key={recognition._id}>
                   <Zoom in timeout={1600 + index * 150}>
                     <Box
                       sx={{
+                        height: '100%',
+                        minHeight: '160px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.4s ease',
+                        p: 2,
+                        borderRadius: 3,
                         position: 'relative',
+                        '&:hover': {
+                          transform: 'translateY(-8px)',
+                          '& .recognition-image': {
+                            animation: `${glitterAnimation} 1.5s ease-in-out`,
+                          },
+                          '& .sparkle': {
+                            animation: `${sparkleAnimation} 1s ease-in-out infinite`,
+                          }
+                        }
                       }}
                     >
-                      <Chip
-                        icon={recognition.icon}
-                        label={recognition.name}
-                        variant="outlined"
+                      <Box
+                        className="sparkle"
                         sx={{
-                          p: 3,
-                          height: 'auto',
-                          borderRadius: 4,
-                          fontSize: '1.1rem',
-                          fontWeight: 600,
-                          background: `linear-gradient(135deg, ${recognition.color}15, ${recognition.color}25)`,
-                          border: `2px solid ${recognition.color}40`,
-                          color: recognition.color,
-                          transition: 'all 0.3s ease',
-                          animation: `${floatAnimation} 4s ease-in-out infinite`,
-                          animationDelay: `${index * 0.3}s`,
-                          '& .MuiChip-icon': {
-                            color: recognition.color,
-                            marginLeft: 1,
-                          },
-                          '& .MuiChip-label': {
-                            px: 2,
-                            py: 1,
-                          },
-                          '&:hover': {
-                            transform: 'translateY(-5px) scale(1.05)',
-                            background: `linear-gradient(135deg, ${recognition.color}25, ${recognition.color}35)`,
-                            border: `2px solid ${recognition.color}60`,
-                            boxShadow: `0 10px 25px ${recognition.color}30`,
-                          }
+                          position: 'absolute', top: '10%', left: '10%', width: '4px', height: '4px', borderRadius: '50%', background: '#FFD700', opacity: 0,
                         }}
                       />
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
+                      <Box
+                        className="sparkle"
                         sx={{
-                          mt: 2,
-                          fontSize: '0.9rem',
-                          fontWeight: 500,
-                          opacity: 0.8,
+                          position: 'absolute', top: '20%', right: '15%', width: '3px', height: '3px', borderRadius: '50%', background: '#FF6B35', opacity: 0, animationDelay: '0.3s',
                         }}
-                      >
-                        {recognition.fullName}
-                      </Typography>
+                      />
+                      <Box
+                        className="sparkle"
+                        sx={{
+                          position: 'absolute', bottom: '20%', left: '20%', width: '2px', height: '2px', borderRadius: '50%', background: '#4ECDC4', opacity: 0, animationDelay: '0.6s',
+                        }}
+                      />
+
+                      {recognition.imageUrl ? (
+                        <>
+                          <Box
+                            className="recognition-image"
+                            sx={{
+                              mb: showTextWithImage ? 1.5 : 0,
+                              borderRadius: 2,
+                              transition: 'all 0.4s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              height: '120px',
+                              width: '100%',
+                              maxWidth: '180px',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              '&::before': {
+                                content: '""',
+                                position: 'absolute',
+                                top: 0,
+                                left: '-100%',
+                                width: '100%',
+                                height: '100%',
+                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent)',
+                                transition: 'all 0.6s ease',
+                                zIndex: 1,
+                              },
+                              '&:hover::before': {
+                                left: '100%',
+                              }
+                            }}
+                          >
+                            <img
+                              src={`${API_URL}${recognition.imageUrl}`}
+                              alt={recognition.name}
+                              style={{
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                width: 'auto',
+                                height: 'auto',
+                                display: 'block',
+                                borderRadius: '8px',
+                                transition: 'all 0.4s ease',
+                                objectFit: 'contain',
+                                position: 'relative',
+                                zIndex: 0,
+                              }}
+                            />
+                          </Box>
+                          
+                          {showTextWithImage && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                mt: 1, fontSize: '0.8rem', fontWeight: 500, opacity: 0.7, textAlign: 'center',
+                              }}
+                            >
+                              {recognition.name}
+                            </Typography>
+                          )}
+                        </>
+                      ) : (
+                        <Chip
+                          label={recognition.name}
+                          variant="outlined"
+                          icon={<BusinessIcon />}
+                          sx={{
+                            p: 2, height: 'auto', minHeight: '60px', borderRadius: 4, fontSize: '0.95rem', fontWeight: 600,
+                          }}
+                        />
+                      )}
                     </Box>
                   </Zoom>
                 </Grid>
@@ -362,36 +451,6 @@ const TrustedByLeaders = () => {
             </Grid>
           </Box>
         </Grow>
-
-        {/* Decorative Elements */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '20%',
-            right: '10%',
-            width: 100,
-            height: 100,
-            borderRadius: '50%',
-            background: `linear-gradient(45deg, ${theme.palette.primary.main}20, ${theme.palette.secondary.main}20)`,
-            animation: `${floatAnimation} 8s ease-in-out infinite`,
-            opacity: 0.3,
-            display: { xs: 'none', md: 'block' }
-          }}
-        />
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: '20%',
-            left: '5%',
-            width: 60,
-            height: 60,
-            borderRadius: '50%',
-            background: `linear-gradient(45deg, ${theme.palette.secondary.main}20, ${theme.palette.primary.main}20)`,
-            animation: `${floatAnimation} 6s ease-in-out infinite reverse`,
-            opacity: 0.3,
-            display: { xs: 'none', md: 'block' }
-          }}
-        />
       </Container>
     </Box>
   );

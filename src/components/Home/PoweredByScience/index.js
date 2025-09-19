@@ -7,20 +7,19 @@ import {
   useTheme,
   useMediaQuery,
   Fade,
-  Chip,
-  Zoom
+  Chip
 } from '@mui/material';
 import { keyframes } from '@emotion/react';
+import io from 'socket.io-client';
+import axios from 'axios';
+
+// Optional icons (only used on chips; images replace card content)
 import VerifiedIcon from '@mui/icons-material/Verified';
 import ScienceIcon from '@mui/icons-material/Science';
-import SecurityIcon from '@mui/icons-material/Security';
 import PublicIcon from '@mui/icons-material/Public';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import LanguageIcon from '@mui/icons-material/Language';
-import NatureIcon from '@mui/icons-material/Nature';
-import LocalFloristIcon from '@mui/icons-material/LocalFlorist';
-import ForestIcon from '@mui/icons-material/Forest';
+import { API_BASE } from '../../../utils/api';
+
+const API_URL = `${API_BASE}/api`;
 
 // Continuous scroll animation
 const scrollAnimation = keyframes`
@@ -30,147 +29,121 @@ const scrollAnimation = keyframes`
 
 // Glow animation for hover
 const glowAnimation = keyframes`
-  0% { box-shadow: 0 0 20px rgba(26, 201, 159, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(26, 201, 159, 0.6), 0 0 40px rgba(26, 201, 159, 0.4); }
-  100% { box-shadow: 0 0 20px rgba(26, 201, 159, 0.3); }
+  0% { box-shadow: 0 0 0 rgba(26, 201, 159, 0); }
+  50% { box-shadow: 0 8px 32px rgba(26, 201, 159, 0.35); }
+  100% { box-shadow: 0 0 0 rgba(26, 201, 159, 0); }
 `;
 
-// Pulse animation
+// Pulse animation (subtle)
 const pulseAnimation = keyframes`
   0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50% { transform: scale(1.02); }
   100% { transform: scale(1); }
 `;
+
+// Icon for a category name (visual consistency with your current chips)
+const iconForCategory = (name = '') => {
+  const s = name.toLowerCase();
+  if (s.includes('audit')) return <VerifiedIcon />;
+  if (s.includes('scient')) return <ScienceIcon />;
+  return <PublicIcon />; // default "Internationally Accepted"
+};
+
+// Accent color for a category (used for hover ring)
+const colorForCategory = (name = '') => {
+  const s = name.toLowerCase();
+  if (s.includes('audit')) return '#45b7d1';
+  if (s.includes('scient')) return '#2E8B8B';
+  return '#1AC99F';
+};
 
 const PoweredByScience = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const [isPaused, setIsPaused] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('internationally');
+
+  // DB-driven categories
+  const [categories, setCategories] = useState([]); // [{_id, name, description}]
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+
+  // Frameworks (with populated category)
+  const [frameworks, setFrameworks] = useState([]);
+
   const containerRef = useRef(null);
 
-  // Framework data with icons, descriptions, and categories
-  const frameworks = [
-    {
-      id: 1,
-      name: 'ISO 14064',
-      description: 'GHG Inventories & Verification',
-      icon: <VerifiedIcon />,
-      color: '#1AC99F',
-      categories: ['internationally']
-    },
-    {
-      id: 2,
-      name: 'ISO 14067',
-      description: 'Carbon Footprint of Products',
-      icon: <NatureIcon />,
-      color: '#2E8B8B',
-      categories: ['internationally']
-    },
-    {
-      id: 3,
-      name: 'ISO 14068',
-      description: 'Carbon Neutrality',
-      icon: <SecurityIcon />,
-      color: '#3498db',
-      categories: ['internationally']
-    },
-    {
-      id: 4,
-      name: 'ISO 14083',
-      description: 'Transport GHG Emissions',
-      icon: <PublicIcon />,
-      color: '#9c27b0',
-      categories: ['internationally', ]
-    },
-    {
-      id: 5,
-      name: 'GHG Protocol',
-      description: 'Corporate, Product & Scope 3',
-      icon: <AssessmentIcon />,
-      color: '#ff6b35',
-      categories: ['internationally', 'scientifically', ]
-    },
-    {
-      id: 6,
-      name: 'SBTi',
-      description: 'Science Based Targets',
-      icon: <AccountTreeIcon />,
-      color: '#4ecdc4',
-      categories: [ 'scientifically']
-    },
-    {
-      id: 7,
-      name: 'GRI',
-      description: 'Global Reporting Initiative',
-      icon: <LanguageIcon />,
-      color: '#45b7d1',
-      categories: ['internationally', 'audit']
-    },
-    {
-      id: 8,
-      name: 'GLEC',
-      description: 'Logistics Emissions Council',
-      icon: <PublicIcon />,
-      color: '#f39c12',
-      categories: ['internationally']
-    },
-    {
-      id: 9,
-      name: 'IPCC',
-      description: 'Climate Change Panel',
-      icon: <ScienceIcon />,
-      color: '#e74c3c',
-      categories: [ 'scientifically']
-    },
-    {
-      id: 10,
-      name: 'DEFRA',
-      description: 'UK Emission Factors',
-      icon: <SecurityIcon />,
-      color: '#2ecc71',
-      categories: ['scientifically']
-    },
-    {
-      id: 11,
-      name: 'EPA',
-      description: 'Environmental Protection',
-      icon: <LocalFloristIcon />,
-      color: '#1AC99F',
-      categories: [ 'scientifically']
-    }
-  ];
+  // ---- Load categories + frameworks; wire sockets for live updates
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [catRes, fwRes] = await Promise.all([
+          axios.get(`${API_URL}/pbs/categories`),   // DB categories
+          axios.get(`${API_URL}/pbs/frameworks`)    // DB frameworks (populate category)
+        ]);
+        if (catRes.data?.success) {
+          const cats = catRes.data.data || [];
+          setCategories(cats);
+          // default select: try Internationally, else first
+          const preferred = cats.find(c => (c.name || '').toLowerCase().includes('international')) || cats[0];
+          setSelectedCategoryId(prev => prev || preferred?._id || null);
+        }
+        if (fwRes.data?.success) {
+          setFrameworks(fwRes.data.data || []);
+        }
+      } catch (e) {
+        console.error('Failed to load PBS data', e);
+      }
+    };
+    loadData();
 
-  // Filter frameworks based on selected category
-  const filteredFrameworks = frameworks.filter(framework => 
-    framework.categories.includes(selectedCategory)
-  );
+    // sockets
+    const socket = io(API_BASE);
+    // server should place sockets into 'poweredByScience' room on connect
+    socket.on('pbs-categories-updated', (payload) => {
+      if (payload?.success && Array.isArray(payload.data)) {
+        setCategories(payload.data);
+        // keep a valid selection if the current one was removed
+        if (payload.data.length > 0) {
+          const stillExists = payload.data.some(c => c._id === selectedCategoryId);
+          if (!stillExists) setSelectedCategoryId(payload.data[0]._id);
+        } else {
+          setSelectedCategoryId(null);
+        }
+      }
+    });
+    socket.on('pbs-frameworks-updated', (payload) => {
+      if (payload?.success && Array.isArray(payload.data)) {
+        setFrameworks(payload.data);
+      }
+    });
+    return () => socket.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Duplicate the filtered array for seamless scrolling
-  const duplicatedFrameworks = [...filteredFrameworks, ...filteredFrameworks];
+  // Build chip models from DB categories
+  const chips = categories.map((c) => ({
+    id: c._id,
+    label: c.name,
+    description: c.description,
+    icon: iconForCategory(c.name),
+    color: colorForCategory(c.name),
+  }));
 
-  // Benefit categories
-  const benefitCategories = [
-    { 
-      id: 'internationally',
-      label: 'Internationally Accepted', 
-      icon: <PublicIcon />,
-      description: 'Globally recognized standards'
-    },
-    { 
-      id: 'scientifically',
-      label: 'Scientifically Validated', 
-      icon: <ScienceIcon />,
-      description: 'Research-backed methodologies'
-    },
-    { 
-      id: 'audit',
-      label: 'Audit Ready', 
-      icon: <VerifiedIcon />,
-      description: 'Compliance-focused frameworks'
-    },
-  ];
+  // Filter frameworks by selected category id
+  const filtered = frameworks.filter(fw => fw?.category?._id === selectedCategoryId);
+
+  // Normalize to UI models (logos only)
+  const uiFrameworks = filtered.map(fw => ({
+    id: fw._id,
+    imageUrl: fw?.imageUrl ? `${API_BASE}${fw.imageUrl}` : null,
+    // category color for hover ring
+    color: colorForCategory(fw?.category?.name || ''),
+  }));
+
+  // Duplicate for seamless marquee
+  const duplicatedFrameworks = [...uiFrameworks, ...uiFrameworks];
+
+  // Selected category’s description (from DB)
+  const selectedDescription = categories.find(c => c._id === selectedCategoryId)?.description || '';
 
   return (
     <Box
@@ -196,7 +169,7 @@ const PoweredByScience = () => {
       }}
     >
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        {/* Header Section */}
+        {/* Header */}
         <Fade in timeout={800}>
           <Box textAlign="center" mb={6}>
             <Box
@@ -224,7 +197,7 @@ const PoweredByScience = () => {
                 Powered by Science
               </Typography>
             </Box>
-            
+
             <Typography
               variant="h4"
               component="h2"
@@ -246,7 +219,7 @@ const PoweredByScience = () => {
                 Scientific Frameworks
               </span>
             </Typography>
-            
+
             <Typography
               variant="h6"
               color="text.secondary"
@@ -257,13 +230,13 @@ const PoweredByScience = () => {
                 fontWeight: 400,
               }}
             >
-              Our platform is built on internationally accepted standards and methodologies, 
+              Our platform is built on internationally accepted standards and methodologies,
               ensuring accuracy, credibility, and compliance in every measurement
             </Typography>
           </Box>
         </Fade>
 
-        {/* Category Selection Chips */}
+        {/* Category chips (from DB) */}
         <Fade in timeout={1000}>
           <Box
             sx={{
@@ -274,35 +247,31 @@ const PoweredByScience = () => {
               gap: 2,
             }}
           >
-            {benefitCategories.map((benefit) => (
+            {chips.map((chip) => (
               <Chip
-                key={benefit.id}
-                icon={benefit.icon}
-                label={benefit.label}
-                onClick={() => setSelectedCategory(benefit.id)}
+                key={chip.id}
+                icon={chip.icon}
+                label={chip.label}
+                onClick={() => setSelectedCategoryId(chip.id)}
                 sx={{
                   py: 2.5,
                   px: 2,
                   fontSize: '0.9rem',
                   fontWeight: 600,
-                  background: selectedCategory === benefit.id 
-                    ? theme.palette.primary.main 
+                  background: selectedCategoryId === chip.id
+                    ? theme.palette.primary.main
                     : 'rgba(26, 201, 159, 0.1)',
-                  border: selectedCategory === benefit.id
+                  border: selectedCategoryId === chip.id
                     ? `2px solid ${theme.palette.primary.main}`
                     : '1px solid rgba(26, 201, 159, 0.2)',
-                  color: selectedCategory === benefit.id 
-                    ? 'white' 
-                    : theme.palette.primary.main,
+                  color: selectedCategoryId === chip.id ? 'white' : theme.palette.primary.main,
                   '& .MuiChip-icon': {
-                    color: selectedCategory === benefit.id 
-                      ? 'white' 
-                      : theme.palette.primary.main,
+                    color: selectedCategoryId === chip.id ? 'white' : theme.palette.primary.main,
                   },
                   transition: 'all 0.3s ease',
                   cursor: 'pointer',
                   '&:hover': {
-                    background: selectedCategory === benefit.id
+                    background: selectedCategoryId === chip.id
                       ? theme.palette.primary.main
                       : 'rgba(26, 201, 159, 0.2)',
                     transform: 'translateY(-2px)',
@@ -314,8 +283,8 @@ const PoweredByScience = () => {
           </Box>
         </Fade>
 
-        {/* Selected Category Description */}
-        <Fade in key={selectedCategory} timeout={500}>
+        {/* Category description (from DB) */}
+        <Fade in key={selectedCategoryId || 'none'} timeout={500}>
           <Box textAlign="center" mb={4}>
             <Typography
               variant="body1"
@@ -325,19 +294,19 @@ const PoweredByScience = () => {
                 fontStyle: 'italic',
               }}
             >
-              {benefitCategories.find(cat => cat.id === selectedCategory)?.description}
+              {selectedDescription}
             </Typography>
           </Box>
         </Fade>
 
-        {/* Scrolling Frameworks Section */}
+        {/* Scrolling framework logos (image only) */}
         <Box
           ref={containerRef}
           sx={{
             position: 'relative',
             width: '100%',
             overflow: 'hidden',
-            minHeight: { xs: 180, md: 200 },
+            minHeight: { xs: 160, md: 180 },
             '&::before': {
               content: '""',
               position: 'absolute',
@@ -364,114 +333,79 @@ const PoweredByScience = () => {
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          <Box
-            key={selectedCategory} // Force re-render when category changes
-            sx={{
-              display: 'flex',
-              gap: 3,
-              animation: `${scrollAnimation} ${isMobile ? '30s' : '40s'} linear infinite`,
-              animationPlayState: isPaused ? 'paused' : 'running',
-              '&:hover': {
-                animationPlayState: 'paused',
-              }
-            }}
-          >
-            {duplicatedFrameworks.map((framework, index) => (
-              <Box
-                key={`${framework.id}-${index}`}
-                sx={{
-                  flexShrink: 0,
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    transform: 'translateY(-10px) scale(1.05)',
-                    '& .framework-card': {
-                      animation: `${glowAnimation} 2s ease-in-out infinite`,
-                      border: `2px solid ${framework.color}`,
-                      background: `linear-gradient(135deg, ${framework.color}15, ${framework.color}25)`,
-                    },
-                    '& .framework-icon': {
-                      animation: `${pulseAnimation} 1s ease-in-out infinite`,
-                    }
-                  }
-                }}
-              >
+          {duplicatedFrameworks.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+              No frameworks in this category yet.
+            </Box>
+          ) : (
+            <Box
+              key={selectedCategoryId || 'all'}
+              sx={{
+                display: 'flex',
+                gap: 3,
+                alignItems: 'center',
+                animation: `${scrollAnimation} ${isMobile ? '30s' : '40s'} linear infinite`,
+                animationPlayState: isPaused ? 'paused' : 'running',
+                '&:hover': { animationPlayState: 'paused' }
+              }}
+            >
+              {duplicatedFrameworks.map((fw, idx) => (
                 <Box
-                  className="framework-card"
+                  key={`${fw.id}-${idx}`}
                   sx={{
-                    p: 3,
-                    minWidth: { xs: 200, md: 250 },
-                    height: { xs: 140, md: 160 },
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    border: '2px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: 3,
+                    flexShrink: 0,
+                    minWidth: { xs: 180, md: 220 },
+                    height: { xs: 120, md: 140 },
+                    p: 0,
+                    m: 0,
                     display: 'flex',
-                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 1.5,
-                    position: 'relative',
-                    overflow: 'hidden',
-                    transition: 'all 0.3s ease',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: '-100%',
-                      width: '100%',
-                      height: '100%',
-                      background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)`,
-                      transition: 'left 0.5s ease',
-                    },
-                    '&:hover::before': {
-                      left: '100%',
+                    borderRadius: 2,
+                    transition: 'transform 0.25s ease',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'translateY(-8px)',
+                      '& img': {
+                        animation: `${pulseAnimation} 1s ease-in-out`,
+                        boxShadow: `0 8px 24px ${fw.color}55`,
+                      }
                     }
                   }}
                 >
-                  <Box
-                    className="framework-icon"
-                    sx={{
-                      color: framework.color,
-                      fontSize: 32,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {framework.icon}
-                  </Box>
-                  
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      color: framework.color,
-                      fontSize: { xs: '1.1rem', md: '1.25rem' },
-                      textAlign: 'center',
-                    }}
-                  >
-                    {framework.name}
-                  </Typography>
-                  
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: theme.palette.text.secondary,
-                      fontSize: { xs: '0.75rem', md: '0.875rem' },
-                      textAlign: 'center',
-                      fontWeight: 500,
-                    }}
-                  >
-                    {framework.description}
-                  </Typography>
+                  {fw.imageUrl ? (
+                    <img
+                      src={fw.imageUrl}
+                      alt="framework"
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        objectFit: 'contain',
+                        borderRadius: 12,
+                        display: 'block',
+                        boxShadow: 'none',
+                        transition: 'box-shadow 0.25s ease',
+                      }}
+                      loading="lazy"
+                    />
+                  ) : (
+                    // if a framework lacks an image, show a soft dot (very rare)
+                    <Box
+                      sx={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: '50%',
+                        background: `${fw.color}22`,
+                        boxShadow: `${fw.color}55 0px 4px 16px`,
+                        animation: `${glowAnimation} 2s ease-in-out infinite`
+                      }}
+                    />
+                  )}
                 </Box>
-              </Box>
-            ))}
-          </Box>
+              ))}
+            </Box>
+          )}
         </Box>
-
-        
       </Container>
     </Box>
   );

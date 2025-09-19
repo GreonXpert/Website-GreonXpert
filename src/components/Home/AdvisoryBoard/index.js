@@ -1,158 +1,360 @@
-import React, { useState, useEffect } from 'react';
-import { CheckCircle, Award, Users, Globe, TrendingUp, Zap, Shield } from 'lucide-react';
+// src/components/AdvisoryBoard/AdvisoryBoard.jsx
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import io from 'socket.io-client';
+import {
+  CheckCircle,
+  Award,
+  Users,
+  Globe,
+  TrendingUp as LucideTrendingUp,
+  Zap,
+  Shield,
+  Settings as LucideSettings,
+  LayoutDashboard,
+  Activity,
+  BarChart3,
+  Sparkles,
+  BadgeCheck,
+  Languages,
+  Leaf,
+  FlaskConical,
+} from 'lucide-react';
+import { API_BASE } from '../../../utils/api';
+// === API ===
+const API_URL = `${API_BASE}/api/advisory-board`;
 
-// Enhanced animations
-const floatAnimation = `
-  @keyframes float {
-    0%, 100% { 
-      transform: translateY(0px) rotate(0deg);
+// Map backend icon strings → lucide components
+const ICON_MAP = {
+  Globe,
+  Award,
+  Users,
+  Zap,
+  Shield,
+  CheckCircle,
+  BadgeCheck,
+  Languages,
+  Leaf,
+  Activity,
+  BarChart3,
+  LayoutDashboard,
+  Sparkles,
+  FlaskConical,
+  Dashboard: LayoutDashboard,
+  Settings: LucideSettings,
+  TrendingUp: LucideTrendingUp,
+  AutoAwesome: Sparkles,
+  Insights: Activity,
+  Assessment: BarChart3,
+  Security: Shield,
+  Science: FlaskConical,
+  Public: Globe,
+  Verified: BadgeCheck,
+  Language: Languages,
+  Nature: Leaf,
+};
+
+// Enhanced expertise cleaner for frontend
+const cleanExpertiseData = (expertise) => {
+  if (!expertise) return [];
+  
+  let result = [];
+  
+  if (Array.isArray(expertise)) {
+    result = expertise;
+  } else if (typeof expertise === 'string') {
+    const trimmed = expertise.trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        result = JSON.parse(trimmed);
+      } catch {
+        result = trimmed
+          .slice(1, -1)
+          .split(',')
+          .map(item => item.trim());
+      }
+    } else if (trimmed.includes(',')) {
+      result = trimmed.split(',');
+    } else {
+      result = [trimmed];
     }
-    25% { 
-      transform: translateY(-12px) rotate(0.5deg);
-    }
-    50% { 
-      transform: translateY(-20px) rotate(0deg);
-    }
-    75% { 
-      transform: translateY(-12px) rotate(-0.5deg);
-    }
+  } else {
+    result = [String(expertise)];
   }
-`;
+  
+  return result
+    .map(item => {
+      if (typeof item !== 'string') return String(item);
+      return item
+        .replace(/[\[\]"'\\]/g, '')
+        .replace(/^,+|,+$/g, '')
+        .trim();
+    })
+    .filter(item => item && item.length > 0)
+    .filter((item, index, arr) => arr.indexOf(item) === index);
+};
 
-const slideInFromBottom = `
-  @keyframes slideInFromBottom {
-    0% {
-      opacity: 0;
-      transform: translateY(40px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
+// Helpers
+const toImageSrc = (imageUrl) => {
+  if (!imageUrl) return '';
+  return /^https?:\/\//i.test(imageUrl) ? imageUrl : `${API_BASE}${imageUrl}`;
+};
+const safeColor = (hex) => (hex && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex) ? hex : '#1AC99F');
 
-const scaleBreath = `
-  @keyframes scaleBreath {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-  }
-`;
+// LinkedIn SVG Icon Component
+const LinkedInIcon = ({ size = 16, color = '#0077b5' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+  </svg>
+);
 
-const shimmer = `
-  @keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }
-`;
+const AdvisoryBoard = () => {
+  const [visibleElements, setVisibleElements] = useState({});
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-const pulse = `
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.05); opacity: 0.8; }
-  }
-`;
+  // Socket reference
+  const socketRef = useRef(null);
 
-const glow = `
-  @keyframes glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(26, 201, 159, 0.3); }
-    50% { box-shadow: 0 0 30px rgba(26, 201, 159, 0.6), 0 0 40px rgba(26, 201, 159, 0.4); }
-  }
-`;
-
-// Typewriter Text Component
-const TypewriterText = ({ text, delay = 0, speed = 50 }) => {
-  const [displayText, setDisplayText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(false);
-
+  // staged reveals
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsTyping(true);
-    }, delay);
+    const timers = [
+      setTimeout(() => setVisibleElements((p) => ({ ...p, header: true })), 300),
+      setTimeout(() => setVisibleElements((p) => ({ ...p, subtitle: true })), 800),
+      setTimeout(() => setVisibleElements((p) => ({ ...p, description: true })), 1300),
+      setTimeout(() => setVisibleElements((p) => ({ ...p, members: true })), 1800),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
 
-    return () => clearTimeout(timer);
-  }, [delay]);
-
+  // fetch from backend with real-time updates
   useEffect(() => {
-    if (!isTyping) return;
+    const load = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(API_URL);
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          const normalized = res.data.data.map((m) => ({
+            id: m._id || m.id || m.name,
+            name: m.name || '',
+            title: m.title || '',
+            company: m.company || '',
+            image: toImageSrc(m.imageUrl || ''),
+            expertise: cleanExpertiseData(m.expertise),
+            bio: m.bio || '',
+            iconName: m.icon || 'Globe',
+            color: safeColor(m.color),
+            yearsExperience: m.yearsExperience || '',
+            linkedinUrl: m.linkedinUrl || '',
+          }));
+          setMembers(normalized);
+        } else {
+          setMembers([]);
+        }
+      } catch (e) {
+        console.error('Failed to fetch advisory members', e);
+        setMembers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (currentIndex < text.length) {
-      const timer = setTimeout(() => {
-        setDisplayText(prev => prev + text[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
-      }, speed);
+    load();
 
+    // Initialize socket connection for real-time updates
+    console.log('🔌 Connecting to Advisory Board Socket.IO (Public)...');
+    const socket = io(API_BASE);
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('✅ Advisory Public Socket Connected:', socket.id);
+      // Join public advisory board room
+      socket.emit('join-advisory-room', 'advisoryBoard-public');
+    });
+
+    // Listen for real-time updates
+    socket.on('advisory-members-updated', (payload) => {
+      console.log('🔄 Real-time advisory update received (public):', payload.action);
+      
+      if (payload?.success && Array.isArray(payload.data)) {
+        const normalized = payload.data.map((m) => ({
+          id: m._id || m.id || m.name,
+          name: m.name || '',
+          title: m.title || '',
+          company: m.company || '',
+          image: toImageSrc(m.imageUrl || ''),
+          expertise: cleanExpertiseData(m.expertise),
+          bio: m.bio || '',
+          iconName: m.icon || 'Globe',
+          color: safeColor(m.color),
+          yearsExperience: m.yearsExperience || '',
+          linkedinUrl: m.linkedinUrl || '',
+        }));
+        setMembers(normalized);
+      }
+    });
+
+    socket.on('advisory-error', (error) => {
+      console.error('❌ Advisory Public Socket Error:', error);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Advisory Public Socket Disconnected');
+    });
+
+    // Request initial data
+    socket.emit('request-advisory-data');
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  // Enhanced animations (same as before)
+  const floatAnimation = `
+    @keyframes float {
+      0%, 100% { 
+        transform: translateY(0px) rotate(0deg);
+      }
+      25% { 
+        transform: translateY(-12px) rotate(0.5deg);
+      }
+      50% { 
+        transform: translateY(-20px) rotate(0deg);
+      }
+      75% { 
+        transform: translateY(-12px) rotate(-0.5deg);
+      }
+    }
+  `;
+
+  const slideInFromBottom = `
+    @keyframes slideInFromBottom {
+      0% {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  `;
+
+  const scaleBreath = `
+    @keyframes scaleBreath {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+  `;
+
+  const shimmer = `
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+  `;
+
+  const pulse = `
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+  `;
+
+  const glow = `
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(26, 201, 159, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(26, 201, 159, 0.6), 0 0 40px rgba(26, 201, 159, 0.4); }
+    }
+  `;
+
+  // Typewriter Text Component
+  const TypewriterText = ({ text, delay = 0, speed = 50 }) => {
+    const [displayText, setDisplayText] = useState('');
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isTyping, setIsTyping] = useState(false);
+
+    useEffect(() => {
+      const timer = setTimeout(() => setIsTyping(true), delay);
       return () => clearTimeout(timer);
-    }
-  }, [currentIndex, text, speed, isTyping]);
+    }, [delay]);
 
-  return (
-    <span>
-      {displayText}
-      {isTyping && currentIndex < text.length && (
-        <span
-          style={{
-            borderRight: '2px solid #1AC99F',
-            animation: 'blinkCursor 1s infinite',
-          }}
-        />
-      )}
-    </span>
-  );
-};
+    useEffect(() => {
+      if (!isTyping) return;
+      if (currentIndex < text.length) {
+        const timer = setTimeout(() => {
+          setDisplayText((prev) => prev + text[currentIndex]);
+          setCurrentIndex((prev) => prev + 1);
+        }, speed);
+        return () => clearTimeout(timer);
+      }
+    }, [currentIndex, text, speed, isTyping]);
 
-// Animated Word Reveal Component
-const AnimatedWordReveal = ({ text, delay = 0 }) => {
-  const [visibleWords, setVisibleWords] = useState(0);
-  const words = text.split(' ');
+    return (
+      <span>
+        {displayText}
+        {isTyping && currentIndex < text.length && (
+          <span
+            style={{
+              borderRight: '2px solid #1AC99F',
+              animation: 'blinkCursor 1s infinite',
+            }}
+          />
+        )}
+      </span>
+    );
+  };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const interval = setInterval(() => {
-        setVisibleWords(prev => {
-          if (prev >= words.length) {
-            clearInterval(interval);
-            return prev;
-          }
-          return prev + 1;
-        });
-      }, 150);
+  // Animated Word Reveal Component
+  const AnimatedWordReveal = ({ text, delay = 0 }) => {
+    const [visibleWords, setVisibleWords] = useState(0);
+    const words = text.split(' ');
 
-      return () => clearInterval(interval);
-    }, delay);
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        const interval = setInterval(() => {
+          setVisibleWords((prev) => {
+            if (prev >= words.length) {
+              clearInterval(interval);
+              return prev;
+            }
+            return prev + 1;
+          });
+        }, 150);
+      }, delay);
+      return () => clearTimeout(timer);
+    }, [words.length, delay]);
 
-    return () => clearTimeout(timer);
-  }, [words.length, delay]);
+    return (
+      <span>
+        {words.map((word, index) => (
+          <span
+            key={`${word}-${index}`}
+            style={{
+              opacity: index < visibleWords ? 1 : 0,
+              transform: index < visibleWords ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+              display: 'inline-block',
+              marginRight: '0.3em',
+            }}
+          >
+            {word}
+          </span>
+        ))}
+      </span>
+    );
+  };
 
-  return (
-    <span>
-      {words.map((word, index) => (
-        <span
-          key={index}
-          style={{
-            opacity: index < visibleWords ? 1 : 0,
-            transform: index < visibleWords ? 'translateY(0)' : 'translateY(20px)',
-            transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-            display: 'inline-block',
-            marginRight: '0.3em',
-          }}
-        >
-          {word}
-        </span>
-      ))}
-    </span>
-  );
-};
-
-// Floating Particle Component
-const FloatingParticle = ({ delay = 0, size = 4, color = '#1AC99F', top, left }) => {
-  return (
+  // Floating Particle Component
+  const FloatingParticle = ({ delay = 0, size = 4, color = '#1AC99F', top, left }) => (
     <div
       style={{
         position: 'absolute',
-        top: top,
-        left: left,
+        top,
+        left,
         width: `${size}px`,
         height: `${size}px`,
         background: color,
@@ -164,63 +366,6 @@ const FloatingParticle = ({ delay = 0, size = 4, color = '#1AC99F', top, left })
       }}
     />
   );
-};
-
-const AdvisoryBoard = () => {
-  const [visibleElements, setVisibleElements] = useState({});
-
-  useEffect(() => {
-    const timers = [
-      setTimeout(() => setVisibleElements(prev => ({ ...prev, header: true })), 300),
-      setTimeout(() => setVisibleElements(prev => ({ ...prev, subtitle: true })), 800),
-      setTimeout(() => setVisibleElements(prev => ({ ...prev, description: true })), 1300),
-      setTimeout(() => setVisibleElements(prev => ({ ...prev, members: true })), 1800),
-    ];
-
-    return () => timers.forEach(clearTimeout);
-  }, []);
-
-  // Advisory board members data
-  const advisoryMembers = [
-    {
-      id: 1,
-      name: "Dr. Sarah Mitchell",
-      title: "Chief Sustainability Officer",
-      company: "Fortune 500 Energy Corp",
-      image: "https://m.media-amazon.com/images/S/amzn-author-media-prod/nbgv9ibf9u2f0bs3os7du4lh3t.jpg?w=150&h=150&fit=crop&crop=face",
-      expertise: ["Climate Strategy", "Carbon Markets", "ESG Reporting"],
-      bio: "Leading sustainability transformations for 15+ years with expertise in carbon credit markets and regulatory compliance.",
-      icon: <Globe size={24} />,
-      color: '#1AC99F',
-      yearsExperience: "15+",
-    },
-    {
-      id: 2,
-      name: "Prof. Michael Chen",
-      title: "Climate Science Research Director",
-      company: "MIT Climate Institute",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      expertise: ["Climate Modeling", "Data Analytics", "Research"],
-      bio: "Published 200+ papers on climate change impacts and mitigation strategies. Expert in environmental data science.",
-      icon: <Award size={24} />,
-      color: '#2E8B8B',
-      yearsExperience: "20+",
-    },
-    {
-      id: 3,
-      name: "James Rodriguez",
-      title: "Former VP Sustainable Finance",
-      company: "Goldman Sachs",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      expertise: ["Green Finance", "Impact Investing", "Risk Management"],
-      bio: "Structured $50B+ in sustainable finance deals and pioneered ESG integration in investment frameworks.",
-      icon: <TrendingUp size={24} />,
-      color: '#3498db',
-      yearsExperience: "18+",
-    },
-    
-  
-  ];
 
   return (
     <>
@@ -288,6 +433,15 @@ const AdvisoryBoard = () => {
 
         .member-icon {
           transition: transform 0.6s ease;
+        }
+
+        .linkedin-btn {
+          transition: all 0.3s ease;
+        }
+
+        .linkedin-btn:hover {
+          background: rgba(0, 119, 181, 0.1) !important;
+          transform: scale(1.05);
         }
       `}</style>
       
@@ -400,7 +554,7 @@ const AdvisoryBoard = () => {
               }}
             >
               <AnimatedWordReveal 
-                text="Our expert advisory committee guides GreonXpert's platform evolution and rigorously vets our carbon and ESG methodologies. This ensures you rely on the most advanced, high-impact tools for emissions tracking, sustainability reporting, and strategic decarbonization."
+                text="Guided by top carbon and ESG specialists, GreonXpert delivers high-impact tools for emissions tracking, sustainability reporting, and strategic decarbonisation, giving you the ultimate advantage in a green economy."
                 delay={3500}
               />
             </div>
@@ -417,202 +571,252 @@ const AdvisoryBoard = () => {
               transition: 'all 1s ease-out',
             }}
           >
-            {advisoryMembers.map((member, index) => (
-              <div
-                key={member.id}
-                className="member-card"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(15px)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  borderRadius: '1rem',
-                  padding: '2rem',
-                  textAlign: 'center',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  animation: `float ${8 + index * 0.5}s ease-in-out infinite`,
-                  animationDelay: `${index * 0.3}s`,
-                }}
-              >
-                {/* Shimmer effect */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: '-200px',
-                    width: '200px',
-                    height: '100%',
-                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-                    animation: `shimmer 4s infinite`,
-                    animationDelay: `${index * 0.5}s`,
-                  }}
-                />
+            {loading && (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#64748b' }}>
+                Loading advisory board…
+              </div>
+            )}
 
-                {/* Avatar Section */}
-                <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
-                  <div style={{ position: 'relative', display: 'inline-block' }}>
-                    <img
-                      className="member-avatar"
-                      src={member.image}
-                      alt={member.name}
-                      style={{
-                        width: '100px',
-                        height: '100px',
-                        borderRadius: '50%',
-                        objectFit: 'cover',
-                        border: `4px solid ${member.color}30`,
-                        boxShadow: `0 8px 32px ${member.color}20`,
-                        marginBottom: '1rem',
-                      }}
-                    />
-                    <div
-                      className="member-icon"
-                      style={{
-                        position: 'absolute',
-                        bottom: '1rem',
-                        right: '-10px',
-                        background: 'white',
-                        borderRadius: '50%',
-                        padding: '0.5rem',
-                        boxShadow: `0 4px 12px ${member.color}30`,
-                        color: member.color,
-                      }}
-                    >
-                      {member.icon}
-                    </div>
-                  </div>
-                  
-                  {/* Experience Badge */}
+            {!loading && members.length === 0 && (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#64748b' }}>
+                No advisory board members yet.
+              </div>
+            )}
+
+            {members.map((member, index) => {
+              const IconComp = ICON_MAP[member.iconName] || Globe;
+              const color = member.color;
+              const cleanedExpertise = cleanExpertiseData(member.expertise);
+              
+              return (
+                <div
+                  key={member.id || `${member.name}-${index}`}
+                  className="member-card"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(15px)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '1rem',
+                    padding: '2rem',
+                    textAlign: 'center',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    animation: `float ${8 + index * 0.5}s ease-in-out infinite`,
+                    animationDelay: `${index * 0.3}s`,
+                  }}
+                >
+                  {/* Shimmer effect */}
                   <div
                     style={{
                       position: 'absolute',
-                      top: '-10px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      background: `linear-gradient(135deg, ${member.color}15, ${member.color}25)`,
-                      color: member.color,
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '50px',
-                      fontSize: '0.75rem',
+                      top: 0,
+                      left: '-200px',
+                      width: '200px',
+                      height: '100%',
+                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                      animation: `shimmer 4s infinite`,
+                      animationDelay: `${index * 0.5}s`,
+                    }}
+                  />
+
+                  {/* Avatar Section */}
+                  <div style={{ marginBottom: '1.5rem', position: 'relative' }}>
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      {member.image ? (
+                        <img
+                          className="member-avatar"
+                          src={member.image}
+                          alt={member.name}
+                          style={{
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                            border: `4px solid ${color}30`,
+                            boxShadow: `0 8px 32px ${color}20`,
+                            marginBottom: '1rem',
+                          }}
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <div
+                          className="member-avatar"
+                          style={{
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
+                            background: `${color}22`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: '1rem',
+                            border: `4px solid ${color}30`,
+                            boxShadow: `0 8px 32px ${color}20`,
+                            fontWeight: 700,
+                            color: color,
+                          }}
+                        >
+                          {member.name?.charAt(0) || 'A'}
+                        </div>
+                      )}
+
+                      <div
+                        className="member-icon"
+                        style={{
+                          position: 'absolute',
+                          bottom: '1rem',
+                          right: '-10px',
+                          background: 'white',
+                          borderRadius: '50%',
+                          padding: '0.5rem',
+                          boxShadow: `0 4px 12px ${color}30`,
+                          color: color,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <IconComp size={24} />
+                      </div>
+                    </div>
+                    
+                    {/* Experience Badge */}
+                    {member.yearsExperience ? (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '-10px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          background: `linear-gradient(135deg, ${color}15, ${color}25)`,
+                          color: color,
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '50px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          border: `1px solid ${color}30`,
+                        }}
+                      >
+                        {member.yearsExperience}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Name and Title */}
+                  <h3
+                    style={{
+                      fontSize: '1.5rem',
+                      fontWeight: 700,
+                      marginBottom: '0.5rem',
+                      background: `linear-gradient(45deg, ${color}, ${color}AA)`,
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    {member.name}
+                  </h3>
+                  
+                  <p
+                    style={{
+                      fontSize: '1.1rem',
                       fontWeight: 600,
-                      border: `1px solid ${member.color}30`,
+                      color: '#1e293b',
+                      marginBottom: '0.25rem',
                     }}
                   >
-                    {member.yearsExperience} Years
-                  </div>
-                </div>
-
-                {/* Name and Title */}
-                <h3
-                  style={{
-                    fontSize: '1.5rem',
-                    fontWeight: 700,
-                    marginBottom: '0.5rem',
-                    background: `linear-gradient(45deg, ${member.color}, ${member.color}AA)`,
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
-                >
-                  {member.name}
-                </h3>
-                
-                <p
-                  style={{
-                    fontSize: '1.1rem',
-                    fontWeight: 600,
-                    color: '#1e293b',
-                    marginBottom: '0.25rem',
-                  }}
-                >
-                  {member.title}
-                </p>
-                
-                <p
-                  style={{
-                    fontSize: '0.9rem',
-                    color: '#64748b',
-                    marginBottom: '1rem',
-                    fontWeight: 500,
-                  }}
-                >
-                  {member.company}
-                </p>
-
-                <hr style={{ border: 'none', height: '1px', background: 'rgba(0,0,0,0.1)', margin: '1rem 0' }} />
-
-                {/* Expertise Tags */}
-                <div style={{ marginBottom: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
-                  {member.expertise.map((skill, skillIndex) => (
-                    <span
-                      key={skillIndex}
-                      style={{
-                        background: `${member.color}15`,
-                        color: member.color,
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '50px',
-                        fontSize: '0.75rem',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-
-               
-
-                {/* Social Links Placeholder */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-                  <div
+                    {member.title}
+                  </p>
+                  
+                  <p
                     style={{
-                      width: '2rem',
-                      height: '2rem',
-                      borderRadius: '50%',
-                      background: `${member.color}10`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                    }}
-                    onMouseOver={(e) => {
-                      e.target.style.background = `${member.color}20`;
-                      e.target.style.transform = 'scale(1.1)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.background = `${member.color}10`;
-                      e.target.style.transform = 'scale(1)';
+                      fontSize: '0.9rem',
+                      color: '#64748b',
+                      marginBottom: '1rem',
+                      fontWeight: 500,
                     }}
                   >
-                    <span style={{ color: member.color, fontSize: '0.8rem' }}>in</span>
+                    {member.company}
+                  </p>
+
+                  <hr style={{ border: 'none', height: '1px', background: 'rgba(0,0,0,0.1)', margin: '1rem 0' }} />
+
+                  {/* Expertise Tags - Now Clean */}
+                  <div style={{ marginBottom: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
+                    {cleanedExpertise.map((skill, idx) => (
+                      <span
+                        key={`${member.id}-skill-${idx}`}
+                        style={{
+                          background: `${color}15`,
+                          color: color,
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '50px',
+                          fontSize: '0.75rem',
+                          fontWeight: 500,
+                        }}
+                      >
+                        {skill}
+                      </span>
+                    ))}
                   </div>
-                  <div
-                    style={{
-                      width: '2rem',
-                      height: '2rem',
-                      borderRadius: '50%',
-                      background: `${member.color}10`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                    }}
-                    onMouseOver={(e) => {
-                      e.target.style.background = `${member.color}20`;
-                      e.target.style.transform = 'scale(1.1)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.background = `${member.color}10`;
-                      e.target.style.transform = 'scale(1)';
-                    }}
-                  >
-                    <span style={{ color: member.color, fontSize: '0.8rem' }}>@</span>
+
+                  {/* Social Links */}
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+                    {/* LinkedIn Link - Functional */}
+                    {member.linkedinUrl ? (
+                      <a
+                        href={member.linkedinUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="linkedin-btn"
+                        style={{
+                          width: '2rem',
+                          height: '2rem',
+                          borderRadius: '50%',
+                          background: '#0077b5',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          textDecoration: 'none',
+                          transition: 'all 0.3s ease',
+                        }}
+                        title="LinkedIn Profile"
+                      >
+                        <LinkedInIcon size={16} color="white" />
+                      </a>
+                    ) : (
+                      <div
+                        style={{
+                          width: '2rem',
+                          height: '2rem',
+                          borderRadius: '50%',
+                          background: `${color}10`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.background = `${color}20`;
+                          e.currentTarget.style.transform = 'scale(1.1)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.background = `${color}10`;
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                        title="LinkedIn"
+                      >
+                        <LinkedInIcon size={12} color={color} />
+                      </div>
+                    )}
+
+                    {/* Website placeholder */}
+                    
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

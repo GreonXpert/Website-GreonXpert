@@ -52,14 +52,14 @@ const HeroContent = () => {
         color: '#212529',
         margin: isMobile ? '0 0 16px 0' : isTablet ? '0 0 20px 0' : '0 0 24px 0'
       }}>
-        Sustainability Starts Here{' '}
+        Green today, greater {' '}
         <span style={{
           background: 'linear-gradient(135deg, #1AC99F 0%, #2E8B8B 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
         }}>
-          NOW
+          tomorrow
         </span>
       </h1>
 
@@ -74,20 +74,9 @@ const HeroContent = () => {
         lineHeight: 1.4,
         margin: isMobile ? '0 0 16px 0' : isTablet ? '0 0 20px 0' : '0 0 24px 0'
       }}>
-        From Real-Time Decarbonization to Audit Ready Compliance
-      </h2>
+      One platform, Real progress – Track, Improve and Lead with one Powerful solution        </h2>
 
-      {/* Description */}
-      <p style={{
-        color: '#6c757d',
-        marginBottom: isMobile ? '24px' : isTablet ? '28px' : '32px',
-        fontSize: isMobile ? '16px' : isTablet ? '17px' : '18px',
-        lineHeight: 1.6,
-        maxWidth: isMobile ? '100%' : isTablet ? '500px' : '600px',
-        margin: isMobile ? '0 0 24px 0' : isTablet ? '0 0 28px 0' : '0 0 32px 0'
-      }}>
-        Decarbonize your business. Capture, report, and optimize your sustainability impact—all in one complete platform.
-      </p>
+     
 
       {/* Action Buttons */}
       <div style={{

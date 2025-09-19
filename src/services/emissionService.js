@@ -1,53 +1,58 @@
-// src/services/emissionService.js
 import axios from 'axios';
+import { API_BASE } from '../utils/api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = `${API_BASE}/api/emissions`;
 
-// Fetch all emissions data
-export const getAllEmissions = async (params = {}) => {
+/**
+ * Fetches all emissions data from the backend.
+ * @returns {Promise<Array>} A promise that resolves to an array of emissions data.
+ */
+const getAllEmissions = async (params = {}) => {
   try {
-    const response = await axios.get(`${API_URL}/api/emissions/`, { params });
-    return response.data;
+    const response = await axios.get(API_URL, { params });
+    if (response.data && response.data.success) {
+      return response.data.data;
+    }
+    return [];
   } catch (error) {
-    throw error.response?.data || { message: 'Error fetching emissions data' };
+    console.error('Error fetching emissions data:', error);
+    return [];
   }
 };
 
-// Fetch emissions data for a specific year
-export const getEmissionByYear = async (year) => {
+/**
+ * Fetches emissions data within a specific year range.
+ * @param {number} startYear - The starting year of the range.
+ * @param {number} endYear - The ending year of the range.
+ * @returns {Promise<Array>} A promise that resolves to an array of emissions data.
+ */
+const getEmissionsByYearRange = async (startYear, endYear) => {
+  return getAllEmissions({ startYear, endYear });
+};
+
+/**
+ * Fetches summary statistics for emissions data.
+ * @returns {Promise<Object>} A promise that resolves to an object with statistics.
+ */
+const getEmissionsStats = async () => {
   try {
-    const response = await axios.get(`${API_URL}/api/emissions/${year}`);
-    return response.data;
+    const response = await axios.get(`${API_URL}/stats/summary`);
+    if (response.data && response.data.success) {
+      return response.data.data;
+    }
+    return {};
   } catch (error) {
-    throw error.response?.data || { message: `Error fetching emissions data for year ${year}` };
+    console.error('Error fetching emissions stats:', error);
+    return {};
   }
 };
 
-// Fetch emissions statistics
-export const getEmissionsStats = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/api/emissions/stats/summary`);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: 'Error fetching emissions statistics' };
-  }
-};
 
-// Fetch emissions data with year range filter
-export const getEmissionsByYearRange = async (startYear, endYear) => {
-  try {
-    const response = await axios.get(`${API_URL}/api/emissions/`, {
-      params: { startYear, endYear }
-    });
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: 'Error fetching emissions data by year range' };
-  }
-};
-
-export default {
+// Export all functions as a single default object
+const emissionService = {
   getAllEmissions,
-  getEmissionByYear,
+  getEmissionsByYearRange,
   getEmissionsStats,
-  getEmissionsByYearRange
 };
+
+export default emissionService;

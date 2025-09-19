@@ -1,4 +1,4 @@
-// src/components/Hero/Hero.jsx
+// src/components/Home/Hero/Hero.jsx
 import React, { useState, useEffect } from 'react';
 import HeroContent from './HeroContent';
 import ThreeJSGlobe from './ThreeJSGlobe';
@@ -37,7 +37,7 @@ const Hero = () => {
       overflow: 'hidden',
       background: 'linear-gradient(135deg, rgba(26, 201, 159, 0.05) 0%, rgba(30, 101, 101, 0.1) 100%)',
     }}>
-      {/* 3D Globe Background */}
+      {/* Premium 3D Globe Background */}
       <ThreeJSGlobe />
       
       {/* Content Container */}

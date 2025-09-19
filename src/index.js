@@ -3,6 +3,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
+
 
 // Import fonts if needed
 import '@fontsource/poppins/300.css';

@@ -13,22 +13,24 @@ import {
   Zoom
 } from '@mui/material';
 import { keyframes } from '@emotion/react';
-import * as THREE from 'three';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import SettingsIcon from '@mui/icons-material/Settings';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
 import SecurityIcon from '@mui/icons-material/Security';
+import ShieldIcon from '@mui/icons-material/Shield';
+import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
+import SpeedIcon from '@mui/icons-material/Speed';
 
 // Advanced animations
 const glowPulse = keyframes`
   0%, 100% { 
-    box-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor;
+    box-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
     filter: brightness(1);
   }
   50% { 
-    box-shadow: 0 0 30px currentColor, 0 0 60px currentColor, 0 0 90px currentColor;
+    box-shadow: 0 0 25px currentColor, 0 0 50px currentColor;
     filter: brightness(1.2);
   }
 `;
@@ -38,13 +40,13 @@ const floatAnimation = keyframes`
     transform: translateY(0px) rotate(0deg);
   }
   25% { 
-    transform: translateY(-15px) rotate(1deg);
+    transform: translateY(-10px) rotate(1deg);
   }
   50% { 
-    transform: translateY(-25px) rotate(0deg);
+    transform: translateY(-15px) rotate(0deg);
   }
   75% { 
-    transform: translateY(-15px) rotate(-1deg);
+    transform: translateY(-10px) rotate(-1deg);
   }
 `;
 
@@ -88,153 +90,133 @@ const rotateGlow = keyframes`
   }
 `;
 
-// 3D Icon Component using Three.js
-const ThreeJSIcon = ({ feature, isActive }) => {
-  const mountRef = useRef(null);
-  const sceneRef = useRef(null);
-  const rendererRef = useRef(null);
-  const frameRef = useRef();
-  const meshRef = useRef(null);
+const iconPulse = keyframes`
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(0deg);
+  }
+`;
 
-  useEffect(() => {
-    if (!mountRef.current) return;
+const iconFloat = keyframes`
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+`;
 
-    // Scene setup
-    const scene = new THREE.Scene();
-    sceneRef.current = scene;
-
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: true, 
-      alpha: true,
-      powerPreference: "high-performance"
-    });
-    
-    const size = 120;
-    renderer.setSize(size, size);
-    renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    rendererRef.current = renderer;
-
-    mountRef.current.appendChild(renderer.domElement);
-
-    // Create 3D geometry based on feature type
-    let geometry;
-    if (feature.id === 'data-confidence') {
-      geometry = new THREE.OctahedronGeometry(1.2, 1);
-    } else if (feature.id === 'compliance-automation') {
-      geometry = new THREE.TorusGeometry(1, 0.4, 8, 16);
-    } else if (feature.id === 'impact-acceleration') {
-      geometry = new THREE.ConeGeometry(1, 2, 8);
+// Enhanced Compact Icon Component
+const CompactIcon = ({ feature, isActive, isHovered }) => {
+  const getIcon = () => {
+    switch (feature.id) {
+      case 'data-confidence':
+        return <ShieldIcon sx={{ fontSize: { xs: 50, md: 60 } }} />;
+      case 'compliance-automation':
+        return <PrecisionManufacturingIcon sx={{ fontSize: { xs: 50, md: 60 } }} />;
+      case 'impact-acceleration':
+        return <SpeedIcon sx={{ fontSize: { xs: 50, md: 60 } }} />;
+      default:
+        return <VerifiedIcon sx={{ fontSize: { xs: 50, md: 60 } }} />;
     }
-
-    const material = new THREE.MeshPhongMaterial({
-      color: new THREE.Color(feature.colorHex),
-      transparent: true,
-      opacity: 0.8,
-      emissive: new THREE.Color(feature.colorHex).multiplyScalar(0.2),
-      shininess: 100,
-    });
-
-    const mesh = new THREE.Mesh(geometry, material);
-    meshRef.current = mesh;
-    scene.add(mesh);
-
-    // Add wireframe
-    const wireframe = new THREE.WireframeGeometry(geometry);
-    const wireframeMaterial = new THREE.LineBasicMaterial({ 
-      color: new THREE.Color(feature.colorHex),
-      transparent: true,
-      opacity: 0.6
-    });
-    const wireframeMesh = new THREE.LineSegments(wireframe, wireframeMaterial);
-    scene.add(wireframeMesh);
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(2, 2, 2);
-    scene.add(directionalLight);
-
-    const pointLight = new THREE.PointLight(new THREE.Color(feature.colorHex), 1, 10);
-    pointLight.position.set(0, 0, 3);
-    scene.add(pointLight);
-
-    camera.position.z = 4;
-
-    // Animation loop
-    const animate = () => {
-      frameRef.current = requestAnimationFrame(animate);
-
-      if (meshRef.current) {
-        // Continuous rotation
-        meshRef.current.rotation.x += 0.01;
-        meshRef.current.rotation.y += 0.02;
-        
-        // Enhanced animation when active
-        if (isActive) {
-          const time = Date.now() * 0.002;
-          meshRef.current.position.y = Math.sin(time) * 0.1;
-          meshRef.current.scale.setScalar(1 + Math.sin(time * 2) * 0.1);
-        } else {
-          meshRef.current.position.y = 0;
-          meshRef.current.scale.setScalar(1);
-        }
-        
-        wireframeMesh.rotation.x = meshRef.current.rotation.x;
-        wireframeMesh.rotation.y = meshRef.current.rotation.y;
-        wireframeMesh.position.y = meshRef.current.position.y;
-        wireframeMesh.scale.copy(meshRef.current.scale);
-      }
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    // Cleanup
-    return () => {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current);
-      }
-
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
-      }
-
-      geometry.dispose();
-      material.dispose();
-      renderer.dispose();
-    };
-  }, [feature, isActive]);
+  };
 
   return (
     <Box
-      ref={mountRef}
       sx={{
-        width: 120,
-        height: 120,
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        width: { xs: 80, md: 90 },
+        height: { xs: 80, md: 90 },
+        borderRadius: '50%',
+        background: isActive || isHovered 
+          ? `radial-gradient(circle, ${feature.colorHex}25 0%, ${feature.colorHex}15 50%, transparent 100%)`
+          : `radial-gradient(circle, ${feature.colorHex}15 0%, transparent 70%)`,
+        border: isActive || isHovered 
+          ? `3px solid ${feature.colorHex}`
+          : `2px solid ${feature.colorHex}60`,
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: -4,
+          left: -4,
+          right: -4,
+          bottom: -4,
+          borderRadius: '50%',
+          background: isActive || isHovered 
+            ? `conic-gradient(from 0deg, ${feature.colorHex}, transparent, ${feature.colorHex})`
+            : 'none',
+          animation: (isActive || isHovered) ? `${rotateGlow} 3s linear infinite` : 'none',
+          zIndex: -1,
+          opacity: 0.7,
+        },
       }}
-    />
+    >
+      <Box
+        sx={{
+          color: feature.colorHex,
+          filter: isActive || isHovered 
+            ? `drop-shadow(0 0 15px ${feature.colorHex}) drop-shadow(0 0 25px ${feature.colorHex}60)`
+            : `drop-shadow(0 0 8px ${feature.colorHex}60)`,
+          animation: isActive 
+            ? `${iconPulse} 2s ease-in-out infinite, ${iconFloat} 3s ease-in-out infinite`
+            : isHovered 
+              ? `${iconFloat} 2s ease-in-out infinite`
+              : 'none',
+          transition: 'all 0.3s ease',
+        }}
+      >
+        {getIcon()}
+      </Box>
+
+      {/* Compact orbiting particles */}
+      {(isActive || isHovered) && (
+        <>
+          {[...Array(4)].map((_, i) => {
+            const angle = (i * 360) / 4;
+            const radius = 50;
+            return (
+              <Box
+                key={i}
+                sx={{
+                  position: 'absolute',
+                  width: 3,
+                  height: 3,
+                  borderRadius: '50%',
+                  background: feature.colorHex,
+                  top: '50%',
+                  left: '50%',
+                  transformOrigin: '0 0',
+                  transform: `translate(-50%, -50%) rotate(${angle}deg) translateX(${radius}px)`,
+                  animation: `${rotateGlow} ${2 + i * 0.3}s linear infinite`,
+                  boxShadow: `0 0 8px ${feature.colorHex}`,
+                  opacity: 0.8,
+                }}
+              />
+            );
+          })}
+        </>
+      )}
+    </Box>
   );
 };
 
-// Enhanced Feature Card Component
-// Enhanced Feature Card Component with Mouse Motion Effect
-const PrecisionFeatureCard = ({ feature, isActive, onActivate, index }) => {
+// Compact Feature Card Component
+const CompactFeatureCard = ({ feature, isActive, onActivate, index }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const cardRef = useRef(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
   const [isHovered, setIsHovered] = useState(false);
   const [transform, setTransform] = useState('');
 
-  // Mouse movement handler for 3D tilt effect
+  // Mouse movement handler for subtle 3D tilt effect
   const handleMouseMove = useCallback((e) => {
     if (!cardRef.current || isMobile) return;
 
@@ -243,56 +225,44 @@ const PrecisionFeatureCard = ({ feature, isActive, onActivate, index }) => {
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     
-    // Calculate mouse position relative to card center
     const mouseX = e.clientX - centerX;
     const mouseY = e.clientY - centerY;
     
-    // Calculate rotation angles (max 20 degrees)
-    const rotateX = (mouseY / rect.height) * -20;
-    const rotateY = (mouseX / rect.width) * 20;
+    const rotateX = (mouseY / rect.height) * -8;
+    const rotateY = (mouseX / rect.width) * 8;
     
-    // Calculate translation for subtle movement
-    const translateX = (mouseX / rect.width) * 10;
-    const translateY = (mouseY / rect.height) * 10;
-    
-    // Enhanced transform with perspective and glow
     const newTransform = `
-      perspective(1000px) 
+      perspective(800px) 
       rotateX(${rotateX}deg) 
       rotateY(${rotateY}deg) 
-      translateX(${translateX}px) 
-      translateY(${translateY}px)
-      translateZ(20px)
-      scale(${isActive ? 1.05 : 1.02})
+      translateZ(10px)
+      scale(${isActive ? 1.03 : 1.01})
     `;
     
     setTransform(newTransform);
     setMousePosition({ 
-      x: (mouseX / rect.width) * 100, 
-      y: (mouseY / rect.height) * 100 
+      x: (mouseX / rect.width) * 100 + 50, 
+      y: (mouseY / rect.height) * 100 + 50 
     });
   }, [isMobile, isActive]);
 
-  // Mouse enter handler
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
   }, []);
 
-  // Mouse leave handler
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
-    setTransform('perspective(1000px) rotateX(0deg) rotateY(0deg) translateX(0px) translateY(0px) translateZ(0px) scale(1)');
+    setTransform('perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale(1)');
     setMousePosition({ x: 50, y: 50 });
   }, []);
 
-  // Throttled mouse move for performance
   const throttledMouseMove = useCallback(
-    throttle(handleMouseMove, 16), // ~60fps
+    throttle(handleMouseMove, 16),
     [handleMouseMove]
   );
 
   return (
-    <Zoom in timeout={800 + index * 300}>
+    <Zoom in timeout={600 + index * 200}>
       <Box
         ref={cardRef}
         onClick={onActivate}
@@ -302,67 +272,39 @@ const PrecisionFeatureCard = ({ feature, isActive, onActivate, index }) => {
         sx={{
           cursor: 'pointer',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          transform: transform || 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateX(0px) translateY(0px) translateZ(0px) scale(1)',
+          transform: transform || 'perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale(1)',
           transformStyle: 'preserve-3d',
           willChange: 'transform',
-          '&:hover': {
-            '& .card-glow': {
-              opacity: 1,
-              transform: 'scale(1.1)',
-            },
-            '& .floating-particles': {
-              opacity: 1,
-              transform: 'scale(1.2)',
-            }
-          }
         }}
       >
-        {/* Animated glow effect that follows mouse */}
-        <Box
-          className="card-glow"
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            width: '200%',
-            height: '200%',
-            background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, ${feature.colorHex}20 0%, transparent 70%)`,
-            borderRadius: '50%',
-            transform: 'translate(-50%, -50%) scale(0.8)',
-            transition: 'all 0.3s ease',
-            opacity: isHovered ? 0.8 : 0,
-            zIndex: 0,
-            pointerEvents: 'none',
-          }}
-        />
-
-        {/* Main Card */}
+        {/* Compact Card */}
         <Box
           sx={{
-            width: { xs: '100%', md: 380 },
-            height: { xs: 'auto', md: 520 },
+            width: { xs: 280, sm: 320, md: 340 },
+            height: { xs: 380, sm: 420, md: 440 },
             background: isHovered 
-              ? `linear-gradient(135deg at ${mousePosition.x}% ${mousePosition.y}%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 100%)`
-              : 'rgba(255, 255, 255, 0.95)',
+              ? `linear-gradient(135deg at ${mousePosition.x}% ${mousePosition.y}%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%)`
+              : 'rgba(255, 255, 255, 0.92)',
             backdropFilter: 'blur(20px)',
             borderRadius: 4,
             border: isActive 
-              ? `3px solid ${feature.colorHex}` 
+              ? `2px solid ${feature.colorHex}` 
               : isHovered 
                 ? `2px solid ${feature.colorHex}60`
-                : '2px solid rgba(255, 255, 255, 0.3)',
+                : '1px solid rgba(255, 255, 255, 0.4)',
             boxShadow: isActive 
-              ? `0 25px 50px ${feature.colorHex}30, 0 0 0 1px ${feature.colorHex}20`
+              ? `0 20px 40px ${feature.colorHex}25, 0 0 0 1px ${feature.colorHex}15`
               : isHovered
-                ? `0 20px 40px rgba(0, 0, 0, 0.15), 0 0 20px ${feature.colorHex}20`
-                : '0 15px 35px rgba(0, 0, 0, 0.1)',
-            p: { xs: 4, md: 5 },
+                ? `0 15px 30px rgba(0, 0, 0, 0.12), 0 0 20px ${feature.colorHex}15`
+                : '0 10px 25px rgba(0, 0, 0, 0.08)',
+            p: { xs: 3, md: 4 },
             position: 'relative',
             overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
             zIndex: 1,
-            transformStyle: 'preserve-3d',
             
-            // Dynamic shimmer effect based on mouse position
+            // Subtle shimmer effect
             '&::before': {
               content: '""',
               position: 'absolute',
@@ -371,42 +313,23 @@ const PrecisionFeatureCard = ({ feature, isActive, onActivate, index }) => {
               right: 0,
               bottom: 0,
               background: isHovered || isActive
-                ? `linear-gradient(${mousePosition.x + 45}deg, transparent 30%, ${feature.colorHex}08 50%, transparent 70%)`
+                ? `linear-gradient(45deg, transparent 30%, ${feature.colorHex}08 50%, transparent 70%)`
                 : 'none',
               animation: (isActive || isHovered) ? `${shimmerEffect} 3s linear infinite` : 'none',
               pointerEvents: 'none',
-              opacity: isHovered ? 1 : 0.5,
-              transition: 'opacity 0.3s ease',
+              opacity: 0.6,
             },
-            
-            // Enhanced glow border effect
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              top: -2,
-              left: -2,
-              right: -2,
-              bottom: -2,
-              borderRadius: 4,
-              background: isHovered 
-                ? `conic-gradient(from ${mousePosition.x * 3.6}deg at ${mousePosition.x}% ${mousePosition.y}%, ${feature.colorHex}, transparent, ${feature.colorHex})`
-                : 'none',
-              zIndex: -1,
-              animation: isActive ? `${rotateGlow} 4s linear infinite` : 'none',
-              opacity: isHovered ? 0.6 : 0.4,
-              transition: 'opacity 0.3s ease',
-            }
           }}
         >
-          {/* Interactive light spot that follows mouse */}
+          {/* Interactive light spot */}
           {isHovered && (
             <Box
               sx={{
                 position: 'absolute',
                 top: `${mousePosition.y}%`,
                 left: `${mousePosition.x}%`,
-                width: 100,
-                height: 100,
+                width: 80,
+                height: 80,
                 background: `radial-gradient(circle, ${feature.colorHex}15 0%, transparent 70%)`,
                 borderRadius: '50%',
                 transform: 'translate(-50%, -50%)',
@@ -417,83 +340,117 @@ const PrecisionFeatureCard = ({ feature, isActive, onActivate, index }) => {
             />
           )}
 
-          {/* 3D Icon with enhanced interaction */}
+          {/* Compact Icon */}
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'center',
-              mb: 4,
-              transform: isHovered ? 'translateZ(20px) scale(1.1)' : 'translateZ(0px) scale(1)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transformStyle: 'preserve-3d',
+              mb: 3,
+              transform: isHovered ? 'translateZ(15px) scale(1.05)' : 'translateZ(0px) scale(1)',
+              transition: 'all 0.3s ease',
             }}
           >
-            <ThreeJSIcon feature={feature} isActive={isActive || isHovered} />
+            <CompactIcon feature={feature} isActive={isActive} isHovered={isHovered} />
           </Box>
 
-          {/* Feature Title with 3D effect */}
+          {/* Compact Title */}
           <Typography
-            variant="h4"
+            variant="h5"
             sx={{
-              fontWeight: 800,
+              fontWeight: 700,
               textAlign: 'center',
-              mb: 3,
+              mb: 2,
               color: isActive ? feature.colorHex : theme.palette.text.primary,
-              fontSize: { xs: '1.6rem', md: '2rem' },
-              textShadow: isActive || isHovered ? `0 0 20px ${feature.colorHex}60` : 'none',
-              transform: isHovered ? 'translateZ(15px)' : 'translateZ(0px)',
+              fontSize: { xs: '1.4rem', md: '1.6rem' },
+              textShadow: isActive || isHovered 
+                ? `0 0 15px ${feature.colorHex}50` 
+                : 'none',
+              transform: isHovered ? 'translateZ(10px)' : 'translateZ(0px)',
               transition: 'all 0.3s ease',
-              transformStyle: 'preserve-3d',
             }}
           >
             {feature.title}
           </Typography>
 
-          {/* Feature Description with depth */}
+          {/* Compact Description */}
           <Typography
-            variant="body1"
+            variant="body2"
             sx={{
               textAlign: 'center',
               color: theme.palette.text.secondary,
-              fontSize: { xs: '1rem', md: '1.1rem' },
-              lineHeight: 1.7,
-              mb: 5,
-              minHeight: { xs: 'auto', md: '120px' },
-              transform: isHovered ? 'translateZ(10px)' : 'translateZ(0px)',
+              fontSize: { xs: '0.9rem', md: '1rem' },
+              lineHeight: 1.6,
+              mb: 4,
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              transform: isHovered ? 'translateZ(8px)' : 'translateZ(0px)',
               transition: 'all 0.3s ease',
-              transformStyle: 'preserve-3d',
             }}
           >
             {feature.description}
           </Typography>
 
-          {/* Enhanced Status Indicator */}
+          {/* Compact CTA Button */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              mt: 'auto',
+              transform: isHovered ? 'translateZ(12px)' : 'translateZ(0px)',
+              transition: 'all 0.3s ease',
+            }}
+          >
+            <Button
+              variant="contained"
+              endIcon={<ArrowForwardIcon />}
+              sx={{
+                background: `linear-gradient(135deg, ${feature.colorHex}, ${feature.colorHex}CC)`,
+                color: 'white',
+                px: { xs: 2.5, md: 3 },
+                py: { xs: 1, md: 1.2 },
+                borderRadius: 20,
+                fontWeight: 600,
+                fontSize: { xs: '0.8rem', md: '0.85rem' },
+                textTransform: 'none',
+                boxShadow: `0 4px 15px ${feature.colorHex}40`,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: `linear-gradient(135deg, ${feature.colorHex}EE, ${feature.colorHex})`,
+                  transform: 'translateY(-2px) scale(1.02)',
+                  boxShadow: `0 6px 20px ${feature.colorHex}50`,
+                }
+              }}
+            >
+              {feature.linkText}
+            </Button>
+          </Box>
+
+          {/* Compact Status Indicator */}
           <Box
             sx={{
               position: 'absolute',
-              top: 20,
-              right: 20,
-              width: 16,
-              height: 16,
+              top: 15,
+              right: 15,
+              width: 12,
+              height: 12,
               borderRadius: '50%',
               background: isActive 
-                ? `linear-gradient(45deg, ${feature.colorHex}, #ffffff)`
+                ? `radial-gradient(circle, ${feature.colorHex}, ${feature.colorHex}CC)`
                 : isHovered
-                  ? `linear-gradient(45deg, ${feature.colorHex}80, #ffffff80)`
-                  : 'rgba(0, 0, 0, 0.2)',
+                  ? `radial-gradient(circle, ${feature.colorHex}80, ${feature.colorHex}60)`
+                  : 'rgba(0, 0, 0, 0.15)',
               animation: (isActive || isHovered) ? `${glowPulse} 2s infinite` : 'none',
-              transform: isHovered ? 'translateZ(25px) scale(1.2)' : 'translateZ(0px) scale(1)',
+              transform: isHovered ? 'translateZ(20px) scale(1.2)' : 'translateZ(0px) scale(1)',
               transition: 'all 0.3s ease',
-              transformStyle: 'preserve-3d',
-              boxShadow: isHovered ? `0 0 15px ${feature.colorHex}60` : 'none',
+              boxShadow: isHovered ? `0 0 12px ${feature.colorHex}60` : 'none',
             }}
           />
         </Box>
 
-        {/* Enhanced Floating Elements - Active and Hovered states */}
+        {/* Compact Floating Elements */}
         {(isActive || isHovered) && (
           <Box
-            className="floating-particles"
             sx={{
               position: 'absolute',
               top: 0,
@@ -501,56 +458,35 @@ const PrecisionFeatureCard = ({ feature, isActive, onActivate, index }) => {
               right: 0,
               bottom: 0,
               pointerEvents: 'none',
-              opacity: isHovered ? 0.8 : 0.6,
-              transition: 'all 0.3s ease',
+              opacity: 0.7,
             }}
           >
-            {/* Dynamic orbiting particles */}
-            {[...Array(isHovered ? 12 : 8)].map((_, i) => {
-              const angle = (i * 360) / (isHovered ? 12 : 8);
-              const radius = isHovered ? 100 : 80;
-              const offsetX = Math.cos((angle + mousePosition.x * 2) * Math.PI / 180) * radius;
-              const offsetY = Math.sin((angle + mousePosition.y * 2) * Math.PI / 180) * radius;
+            {[...Array(8)].map((_, i) => {
+              const angle = (i * 360) / 8;
+              const radius = 70;
+              const offsetX = Math.cos(angle * Math.PI / 180) * radius;
+              const offsetY = Math.sin(angle * Math.PI / 180) * radius;
               
               return (
                 <Box
                   key={i}
                   sx={{
                     position: 'absolute',
-                    width: isHovered ? 8 : 6,
-                    height: isHovered ? 8 : 6,
+                    width: 4,
+                    height: 4,
                     borderRadius: '50%',
-                    background: `radial-gradient(circle, ${feature.colorHex}, ${feature.colorHex}80)`,
+                    background: feature.colorHex,
                     top: '50%',
                     left: '50%',
-                    animation: `${floatAnimation} ${3 + i * 0.3}s ease-in-out infinite`,
-                    animationDelay: `${i * 0.2}s`,
-                    transform: `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) translateZ(30px)`,
-                    opacity: 0.8,
-                    boxShadow: `0 0 ${isHovered ? 20 : 15}px ${feature.colorHex}`,
-                    transition: 'all 0.3s ease',
+                    animation: `${floatAnimation} ${2 + i * 0.2}s ease-in-out infinite`,
+                    animationDelay: `${i * 0.1}s`,
+                    transform: `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px)`,
+                    opacity: 0.6,
+                    boxShadow: `0 0 10px ${feature.colorHex}`,
                   }}
                 />
               );
             })}
-
-            {/* Mouse trail effect */}
-            {isHovered && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: `${mousePosition.y}%`,
-                  left: `${mousePosition.x}%`,
-                  width: 4,
-                  height: 4,
-                  borderRadius: '50%',
-                  background: feature.colorHex,
-                  transform: 'translate(-50%, -50%) translateZ(40px)',
-                  boxShadow: `0 0 20px ${feature.colorHex}`,
-                  animation: `${glowPulse} 1s infinite`,
-                }}
-              />
-            )}
           </Box>
         )}
       </Box>
@@ -558,7 +494,7 @@ const PrecisionFeatureCard = ({ feature, isActive, onActivate, index }) => {
   );
 };
 
-// Add throttle utility function if not already available
+// Add throttle utility function
 const throttle = (func, limit) => {
   let inThrottle;
   return function() {
@@ -572,8 +508,8 @@ const throttle = (func, limit) => {
   }
 };
 
-// Real-time Metrics Bar
-const MetricsBar = ({ isVisible }) => {
+// Compact Metrics Bar
+const CompactMetricsBar = ({ isVisible }) => {
   const [metrics, setMetrics] = useState({
     accuracy: 0,
     speed: 0,
@@ -606,13 +542,13 @@ const MetricsBar = ({ isVisible }) => {
   }, [isVisible]);
 
   return (
-    <Fade in={isVisible} timeout={1500}>
+    <Fade in={isVisible} timeout={1200}>
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'center',
-          gap: 6,
-          mt: 10,
+          gap: { xs: 3, md: 6 },
+          mt: 8,
           flexWrap: 'wrap',
         }}
       >
@@ -625,31 +561,33 @@ const MetricsBar = ({ isVisible }) => {
             <Box
               sx={{
                 textAlign: 'center',
-                p: 4,
-                borderRadius: 4,
-                background: `linear-gradient(135deg, ${metric.color}15, ${metric.color}25)`,
+                p: { xs: 2.5, md: 3 },
+                borderRadius: 3,
+                background: `linear-gradient(135deg, ${metric.color}15, ${metric.color}20)`,
                 border: `2px solid ${metric.color}40`,
                 backdropFilter: 'blur(10px)',
-                minWidth: 180,
+                minWidth: { xs: 120, md: 150 },
                 transition: 'all 0.3s ease',
-                animation: `${floatAnimation} ${4 + index}s ease-in-out infinite`,
+                animation: `${floatAnimation} ${3 + index}s ease-in-out infinite`,
+                
                 '&:hover': {
-                  transform: 'translateY(-10px) scale(1.05)',
-                  boxShadow: `0 20px 40px ${metric.color}30`,
+                  transform: 'translateY(-8px) scale(1.05)',
+                  boxShadow: `0 15px 30px ${metric.color}25`,
+                  border: `2px solid ${metric.color}60`,
                 }
               }}
             >
-              <Box sx={{ color: metric.color, mb: 2, fontSize: 28 }}>
+              <Box sx={{ color: metric.color, mb: 1.5, fontSize: 24 }}>
                 {metric.icon}
               </Box>
               <Typography
-                variant="h3"
+                variant="h4"
                 sx={{
-                  fontWeight: 900,
+                  fontWeight: 800,
                   color: metric.color,
-                  fontSize: '2.5rem',
-                  textShadow: `0 0 15px ${metric.color}60`,
-                  mb: 1,
+                  fontSize: { xs: '1.8rem', md: '2.2rem' },
+                  textShadow: `0 0 10px ${metric.color}50`,
+                  mb: 0.5,
                 }}
               >
                 {metric.value}{metric.suffix}
@@ -659,7 +597,7 @@ const MetricsBar = ({ isVisible }) => {
                 sx={{
                   color: 'text.secondary',
                   fontWeight: 600,
-                  fontSize: '0.9rem',
+                  fontSize: { xs: '0.75rem', md: '0.8rem' },
                   textTransform: 'uppercase',
                   letterSpacing: 1,
                 }}
@@ -684,8 +622,8 @@ const PrecisionInAction = () => {
   useEffect(() => {
     const timers = [
       setTimeout(() => setVisibleElements(prev => ({ ...prev, header: true })), 300),
-      setTimeout(() => setVisibleElements(prev => ({ ...prev, features: true })), 800),
-      setTimeout(() => setShowMetrics(true), 1500),
+      setTimeout(() => setVisibleElements(prev => ({ ...prev, features: true })), 600),
+      setTimeout(() => setShowMetrics(true), 1200),
     ];
 
     return () => timers.forEach(clearTimeout);
@@ -696,24 +634,24 @@ const PrecisionInAction = () => {
       id: 'data-confidence',
       icon: <VerifiedIcon />,
       title: 'Data Confidence',
-      description: 'Powered by ISO 14064, GHG Protocol & SBTi with end-to-end validation—every emission captured.',
-      linkText: 'View Standards & Validation',
+      description: 'Powered by ISO 14064, GHG Protocol & SBTi with end-to-end validation—every emission captured with precision and reliability.',
+      linkText: 'View Standards',
       colorHex: '#1AC99F',
     },
     {
       id: 'compliance-automation',
       icon: <SettingsIcon />,
       title: 'Compliance Automation',
-      description: 'Auto-generate ESG & carbon disclosures—BRSR, GRI, CSRD and more—in seconds.',
-      linkText: 'Explore Reporting Suite',
+      description: 'Auto-generate ESG & carbon disclosures—BRSR, GRI, CSRD and more—in seconds with intelligent automation systems.',
+      linkText: 'Explore Reports',
       colorHex: '#2E8B8B',
     },
     {
       id: 'impact-acceleration',
       icon: <RocketLaunchIcon />,
       title: 'Impact Acceleration',
-      description: 'Live KPIs, AI-driven decarbonization roadmaps and integrated carbon-credit trading.',
-      linkText: 'Launch Your Program',
+      description: 'Live KPIs, AI-driven decarbonization roadmaps and integrated carbon-credit trading for maximum environmental impact.',
+      linkText: 'Launch Program',
       colorHex: '#3498db',
     }
   ];
@@ -725,52 +663,52 @@ const PrecisionInAction = () => {
         background: `
           radial-gradient(circle at 20% 30%, rgba(26, 201, 159, 0.08) 0%, transparent 50%),
           radial-gradient(circle at 80% 70%, rgba(52, 152, 219, 0.08) 0%, transparent 50%),
-          radial-gradient(circle at 50% 50%, rgba(46, 139, 139, 0.05) 0%, transparent 70%),
-          linear-gradient(135deg, ${theme.palette.background.default} 0%, rgba(248, 249, 250, 0.5) 100%)
+          radial-gradient(circle at 40% 80%, rgba(46, 139, 139, 0.06) 0%, transparent 50%),
+          linear-gradient(135deg, ${theme.palette.background.default} 0%, rgba(248, 249, 250, 0.6) 50%, rgba(240, 242, 245, 0.4) 100%)
         `,
         position: 'relative',
         overflow: 'hidden',
         minHeight: '100vh',
       }}
     >
-      {/* Animated background elements */}
-      {[...Array(15)].map((_, i) => (
+      {/* Background elements */}
+      {[...Array(12)].map((_, i) => (
         <Box
           key={i}
           sx={{
             position: 'absolute',
-            width: { xs: 4, md: 6 },
-            height: { xs: 4, md: 6 },
+            width: { xs: 2, md: 3 },
+            height: { xs: 2, md: 3 },
             borderRadius: '50%',
-            background: `linear-gradient(45deg, ${['#1AC99F', '#2E8B8B', '#3498dd'][i % 3]}, transparent)`,
+            background: `radial-gradient(circle, ${['#1AC99F', '#2E8B8B', '#3498db'][i % 3]}, ${['#1AC99F', '#2E8B8B', '#3498db'][i % 3]}80)`,
             top: `${Math.random() * 100}%`,
             left: `${Math.random() * 100}%`,
-            animation: `${floatAnimation} ${8 + Math.random() * 8}s ease-in-out infinite`,
+            animation: `${floatAnimation} ${5 + Math.random() * 8}s ease-in-out infinite`,
             animationDelay: `${Math.random() * 5}s`,
-            opacity: 0.4,
+            opacity: 0.5,
           }}
         />
       ))}
 
       <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
-        {/* Header Section */}
-        <Fade in={visibleElements.header} timeout={1000}>
-          <Box textAlign="center" mb={12}>
+        {/* Compact Header */}
+        <Fade in={visibleElements.header} timeout={800}>
+          <Box textAlign="center" mb={10}>
             <Chip
               label="PRECISION IN ACTION"
               sx={{
-                mb: 5,
-                px: 5,
-                py: 3.5,
-                fontSize: '1rem',
-                fontWeight: 900,
-                 background: `linear-gradient(135deg, ${theme.palette.primary.dark}20, ${theme.palette.secondary.main}20)`,
-                border: `3px solid ${theme.palette.primary.main}`,
+                mb: 4,
+                px: 4,
+                py: 2.5,
+                fontSize: '0.9rem',
+                fontWeight: 800,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}20, ${theme.palette.secondary.main}20)`,
+                border: `2px solid ${theme.palette.primary.main}`,
                 color: theme.palette.primary.main,
-                letterSpacing: 2.5,
-                // animation: `${glowPulse} 3s infinite`,
-                 backdropFilter: 'blur(10px)',
-                 boxShadow: `0 0 30px ${theme.palette.primary.main}30`,
+                letterSpacing: 2,
+                backdropFilter: 'blur(10px)',
+                boxShadow: `0 0 30px ${theme.palette.primary.main}25`,
+                borderRadius: 25,
               }}
             />
 
@@ -779,16 +717,15 @@ const PrecisionInAction = () => {
               component="h2"
               sx={{
                 fontWeight: 900,
-                mb: 4,
-                fontSize: { xs: '3rem', md: '5rem' },
+                mb: 3,
+                fontSize: { xs: '2.8rem', md: '4.5rem' },
                 background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main}, #3498db)`,
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 lineHeight: 1.1,
                 letterSpacing: '-0.02em',
-                textShadow: '0 0 40px rgba(26, 201, 159, 0.3)',
-                animation: `${slideInFromLeft} 1s ease-out`,
+                animation: `${slideInFromLeft} 0.8s ease-out`,
               }}
             >
               Where Innovation
@@ -797,36 +734,36 @@ const PrecisionInAction = () => {
             </Typography>
 
             <Typography
-              variant="h5"
+              variant="h6"
               sx={{
                 color: 'text.secondary',
-                maxWidth: '800px',
+                maxWidth: '700px',
                 mx: 'auto',
-                fontSize: { xs: '1.3rem', md: '1.6rem' },
-                lineHeight: 1.6,
+                fontSize: { xs: '1.1rem', md: '1.3rem' },
+                lineHeight: 1.5,
                 fontWeight: 400,
-                animation: `${slideInFromRight} 1s ease-out 0.3s both`,
+                animation: `${slideInFromRight} 0.8s ease-out 0.2s both`,
               }}
             >
-              Experience the future of sustainability with our comprehensive platform that transforms data into actionable insights
+              Transform sustainability data into actionable insights with unmatched precision
             </Typography>
           </Box>
         </Fade>
 
-        {/* Feature Cards */}
-        <Fade in={visibleElements.features} timeout={1200}>
+        {/* Compact Feature Cards */}
+        <Fade in={visibleElements.features} timeout={1000}>
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'center',
-              gap: { xs: 4, md: 8 },
+              gap: { xs: 4, md: 6 },
               flexWrap: 'wrap',
-              mb: 8,
+              mb: 6,
               perspective: '1000px',
             }}
           >
             {features.map((feature, index) => (
-              <PrecisionFeatureCard
+              <CompactFeatureCard
                 key={feature.id}
                 feature={feature}
                 isActive={activeFeature === index}
@@ -837,8 +774,8 @@ const PrecisionInAction = () => {
           </Box>
         </Fade>
 
-        {/* Real-time Metrics */}
-        <MetricsBar isVisible={showMetrics} />
+        {/* Compact Metrics */}
+        <CompactMetricsBar isVisible={showMetrics} />
       </Container>
     </Box>
   );

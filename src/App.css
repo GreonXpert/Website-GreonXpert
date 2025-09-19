@@ -1,20 +1,31 @@
 .App {
   text-align: center;
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
 .App-logo {
   height: 40vmin;
   pointer-events: none;
+  filter: drop-shadow(0 12px 40px rgba(0,0,0,0.2));
+  transition: transform 0.3s ease;
+}
+
+.App-logo:hover {
+  transform: scale(1.05);
+  animation: logo-glow 2s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+    animation: App-logo-spin infinite 20s linear, logo-float 6s ease-in-out infinite;
   }
 }
 
 .App-header {
-  background-color: #282c34;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -22,12 +33,124 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated Background Elements */
+.App-header::before {
+  content: '';
+  position: absolute;
+  top: 15%;
+  right: 10%;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(26, 201, 159, 0.2), transparent 70%);
+  animation: float-animation 6s ease-in-out infinite;
+  filter: blur(1px);
+}
+
+.App-header::after {
+  content: '';
+  position: absolute;
+  bottom: 20%;
+  left: 5%;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(26, 201, 159, 0.15), transparent 60%);
+  animation: float-animation 8s ease-in-out infinite reverse;
+  filter: blur(2px);
+}
+
+/* Floating geometric shapes */
+.App-header .floating-dot-1 {
+  position: absolute;
+  top: 60%;
+  right: 20%;
+  width: 4px;
+  height: 4px;
+  background-color: #1ac99f;
+  border-radius: 50%;
+  animation: pulse-animation 3s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+.App-header .floating-dot-2 {
+  position: absolute;
+  top: 30%;
+  left: 15%;
+  width: 6px;
+  height: 6px;
+  background-color: #1ac99f;
+  border-radius: 50%;
+  animation: pulse-animation 4s ease-in-out infinite;
+  opacity: 0.4;
+}
+
+/* Rotating rings */
+.App-header .rotating-ring-1 {
+  position: absolute;
+  top: 70%;
+  right: 30%;
+  width: 100px;
+  height: 100px;
+  border: 1px solid rgba(26, 201, 159, 0.3);
+  border-radius: 50%;
+  animation: rotate-animation 20s linear infinite;
+}
+
+.App-header .rotating-ring-2 {
+  position: absolute;
+  top: 25%;
+  left: 25%;
+  width: 70px;
+  height: 70px;
+  border: 1px solid rgba(26, 201, 159, 0.2);
+  border-radius: 50%;
+  animation: rotate-animation 15s linear infinite reverse;
+}
+
+/* Shimmer overlay */
+.App-header .shimmer-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(26, 201, 159, 0.08), transparent);
+  animation: shimmer-animation 3s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .App-link {
-  color: #61dafb;
+  color: #1ac99f;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  background: linear-gradient(45deg, #1ac99f, #4ecdc4);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-text 3s ease-in-out infinite;
 }
 
+.App-link:hover {
+  animation: pulse-animation 0.3s ease, shimmer-text 1s ease-in-out infinite;
+  transform: translateY(-2px);
+}
+
+/* Enhanced text styling */
+.App-header h1,
+.App-header p {
+  background: linear-gradient(45deg, #ffffff, #1ac99f);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-glow 4s ease-in-out infinite;
+}
+
+/* Keyframe Animations */
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
@@ -35,4 +158,184 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+@keyframes float-animation {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+  }
+  33% { 
+    transform: translateY(-10px) rotate(1deg); 
+  }
+  66% { 
+    transform: translateY(-5px) rotate(-1deg); 
+  }
+}
+
+@keyframes logo-float {
+  0%, 100% { 
+    transform: translateY(0px); 
+  }
+  50% { 
+    transform: translateY(-10px); 
+  }
+}
+
+@keyframes pulse-animation {
+  0% { 
+    transform: scale(1); 
+  }
+  50% { 
+    transform: scale(1.05); 
+  }
+  100% { 
+    transform: scale(1); 
+  }
+}
+
+@keyframes logo-glow {
+  0%, 100% { 
+    filter: drop-shadow(0 12px 40px rgba(26, 201, 159, 0.3)); 
+  }
+  50% { 
+    filter: drop-shadow(0 12px 40px rgba(26, 201, 159, 0.6)) drop-shadow(0 0 40px rgba(26, 201, 159, 0.4)); 
+  }
+}
+
+@keyframes shimmer-animation {
+  0% { 
+    background-position: -200px 0; 
+  }
+  100% { 
+    background-position: calc(200px + 100%) 0; 
+  }
+}
+
+@keyframes shimmer-text {
+  0% { 
+    background-position: -200px 0; 
+  }
+  100% { 
+    background-position: calc(200px + 100%) 0; 
+    background-size: 200% 100%;
+  }
+}
+
+@keyframes rotate-animation {
+  0% { 
+    transform: rotate(0deg); 
+  }
+  100% { 
+    transform: rotate(360deg); 
+  }
+}
+
+@keyframes wave-animation {
+  0%, 100% { 
+    transform: translateX(-50%) translateY(0px); 
+  }
+  50% { 
+    transform: translateX(-50%) translateY(-20px); 
+  }
+}
+
+@keyframes text-glow {
+  0%, 100% { 
+    text-shadow: 0 0 10px rgba(26, 201, 159, 0.3); 
+  }
+  50% { 
+    text-shadow: 0 0 20px rgba(26, 201, 159, 0.6), 0 0 30px rgba(26, 201, 159, 0.4); 
+  }
+}
+
+/* Interactive button styles */
+.animated-button {
+  background: linear-gradient(45deg, #1ac99f, #1ac99fcc);
+  border: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: shimmer-animation 3s ease-in-out infinite;
+}
+
+.animated-button:hover {
+  background: linear-gradient(45deg, #1ac99fdd, #1ac99f);
+  animation: pulse-animation 0.3s ease;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(26, 201, 159, 0.3);
+}
+
+/* Animated chip/badge */
+.animated-chip {
+  background: linear-gradient(45deg, rgba(26, 201, 159, 0.15), rgba(232, 248, 244, 1));
+  border: 1px solid rgba(26, 201, 159, 0.3);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-weight: 800;
+  animation: shimmer-animation 3s ease-in-out infinite;
+  backdrop-filter: blur(8px);
+}
+
+/* Page-level background effects */
+.App-background-effects {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(26, 201, 159, 0.05), transparent 50%), 
+    radial-gradient(circle at 80% 20%, rgba(78, 205, 196, 0.05), transparent 50%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .App-header::before {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .App-header::after {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .App-header .rotating-ring-1 {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .App-header .rotating-ring-2 {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Enhanced card container */
+.animated-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(232, 248, 244, 1) 0%, #ffffff 50%, rgba(232, 248, 244, 1) 100%);
+  box-shadow: 0 10px 40px rgba(26, 201, 159, 0.15), 0 2px 20px rgba(0,0,0,0.08);
+  border: 1px solid rgba(26, 201, 159, 0.1);
+  transition: all 0.3s ease;
+}
+
+.animated-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 60px rgba(26, 201, 159, 0.2), 0 5px 30px rgba(0,0,0,0.12);
+  animation: pulse-animation 0.3s ease;
+}
+
+/* Loading animation for content */
+.content-loading {
+  animation: shimmer-animation 2s ease-in-out infinite;
+  background: linear-gradient(90deg, #f0f0f0, #e0e0e0, #f0f0f0);
+  background-size: 200% 100%;
 }

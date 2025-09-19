@@ -7,7 +7,7 @@ const theme = createTheme({
   palette,
   typography,
   shape: {
-    borderRadius: 12,
+    borderRadius: 6, // was 8
   },
   components: {
     MuiButton: {
@@ -15,13 +15,14 @@ const theme = createTheme({
         root: {
           textTransform: 'none',
           fontWeight: 600,
-          borderRadius: 30,
-          padding: '10px 24px',
+          borderRadius: 16,             // was 20
+          padding: '6px 12px',          // was '8px 16px'
+          fontSize: '0.7rem',           // scaled to match typography
         },
         contained: {
-          boxShadow: '0px 4px 10px rgba(26, 201, 159, 0.25)',
+          boxShadow: '0px 2px 6px rgba(26, 201, 159, 0.25)', // lighter
           '&:hover': {
-            boxShadow: '0px 6px 15px rgba(26, 201, 159, 0.4)',
+            boxShadow: '0px 4px 10px rgba(26, 201, 159, 0.35)', // scaled
           },
         },
       },
@@ -30,7 +31,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 30,
+            borderRadius: 16, // was 20
             '& fieldset': {
               borderColor: '#e9ecef',
             },
@@ -47,8 +48,8 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          boxShadow: '0px 8px 24px rgba(0, 0, 0, 0.08)',
-          borderRadius: 16,
+          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.07)', // smaller/lighter
+          borderRadius: 10, // was 12
         },
       },
     },
@@ -56,7 +57,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.08)',
+          boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.07)', // reduced
         },
       },
     },
@@ -64,6 +65,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           color: palette.grey[500],
+          fontSize: '0.7rem', // smaller adornments
         },
       },
     },

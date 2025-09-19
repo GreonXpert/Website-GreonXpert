@@ -1,4 +1,5 @@
-// src/components/Home/SustainabilityStories/index.js
+// src/components/Home/SustainabilityStories/index.js - FIXED REACT HOOKS ERROR
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
@@ -12,7 +13,9 @@ import {
   Tabs,
   IconButton,
   Zoom,
-  Grow
+  Grow,
+  Button,
+  CircularProgress
 } from '@mui/material';
 import { keyframes } from '@emotion/react';
 import * as THREE from 'three';
@@ -25,8 +28,21 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import PersonIcon from '@mui/icons-material/Person';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import GetAppIcon from '@mui/icons-material/GetApp';
+import { useNavigate } from 'react-router-dom';
 
-// Animations
+// ✅ Backend Integration Imports
+import io from 'socket.io-client';
+import axios from 'axios';
+import { API_BASE } from '../../../utils/api';
+
+// ✅ API Configuration
+const API_URL = `${API_BASE}/api/stories`;
+
+// Animations (keep existing)
 const floatAnimation = keyframes`
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   25% { transform: translateY(-10px) rotate(0.5deg); }
@@ -73,7 +89,7 @@ const throttle = (func, limit) => {
   }
 };
 
-// 3D Background Globe Component
+// 3D Background Globe Component (keep existing)
 const ThreeJSBackground = () => {
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
@@ -195,7 +211,7 @@ const ThreeJSBackground = () => {
   );
 };
 
-// 3D Story Card Component with Tilt Effect
+// ✅ Enhanced 3D Story Card Component with Backend Data
 const StoryCard = ({ story, isActive, categoryColor }) => {
   const cardRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -203,6 +219,7 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
 
   const handleMouseMove = useCallback((e) => {
     if (!cardRef.current || isMobile) return;
@@ -248,6 +265,22 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
     [handleMouseMove]
   );
 
+  // ✅ Backend-compatible card click with engagement tracking
+  const handleCardClick = async () => {
+    try {
+      // Track click engagement
+      await axios.post(`${API_URL}/${story._id}/engagement`, { 
+        action: 'click' 
+      });
+    } catch (error) {
+      console.warn('Failed to track click engagement:', error);
+    }
+
+    // Navigate to story detail page
+    const categoryPath = story.category.toLowerCase();
+    navigate(`/sustainability-stories/${categoryPath}/${story._id}`);
+  };
+
   const getCategoryIcon = () => {
     switch (story.category.toLowerCase()) {
       case 'blog': return <ArticleIcon />;
@@ -257,9 +290,70 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
     }
   };
 
+  // ✅ Backend data-compatible meta info
+  const getMetaInfo = () => {
+    switch (story.category) {
+      case 'Video':
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <CalendarTodayIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary">
+                {new Date(story.date).toLocaleDateString()}
+              </Typography>
+            </Box>
+            <Typography variant="caption" color="text.secondary">•</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <VisibilityIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary">
+                {story.views || '0'} views
+              </Typography>
+            </Box>
+          </Box>
+        );
+      case 'Resources':
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <CalendarTodayIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary">
+                {new Date(story.date).toLocaleDateString()}
+              </Typography>
+            </Box>
+            <Typography variant="caption" color="text.secondary">•</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <GetAppIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary">
+                {story.downloadCount || '0'} downloads
+              </Typography>
+            </Box>
+          </Box>
+        );
+      default: // Blog
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <PersonIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary">
+                {story.author || 'Unknown'}
+              </Typography>
+            </Box>
+            <Typography variant="caption" color="text.secondary">•</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <AccessTimeIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary">
+                {story.readTime || 'Quick read'}
+              </Typography>
+            </Box>
+          </Box>
+        );
+    }
+  };
+
   return (
     <Box
       ref={cardRef}
+      onClick={handleCardClick} 
       onMouseMove={throttledMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -305,7 +399,7 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
           },
         }}
       >
-        {/* Image Container with 3D depth */}
+        {/* ✅ Image Container with Backend URL */}
         <Box
           sx={{
             position: 'relative',
@@ -318,7 +412,7 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
         >
           <Box
             component="img"
-            src={story.image}
+            src={story.image ? `${API_BASE}${story.image}` : '/placeholder-image.jpg'}
             alt={story.title}
             sx={{
               width: '100%',
@@ -326,6 +420,9 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
               objectFit: 'cover',
               transition: 'transform 0.6s ease',
               transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+            }}
+            onError={(e) => {
+              e.target.src = '/placeholder-image.jpg';
             }}
           />
           
@@ -347,6 +444,44 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
               transition: 'all 0.3s ease',
             }}
           />
+
+          {/* Featured Badge */}
+          {story.featured && (
+            <Chip
+              label="Featured"
+              size="small"
+              sx={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: 'rgba(255, 215, 0, 0.9)',
+                color: '#000',
+                fontWeight: 600,
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                transform: isHovered ? 'translateZ(30px) scale(1.1)' : 'translateZ(0px) scale(1)',
+                transition: 'all 0.3s ease',
+              }}
+            />
+          )}
+
+          {/* Duration/File Size Badge for Videos/Resources */}
+          {(story.duration || story.fileSize) && (
+            <Chip
+              label={story.duration || story.fileSize}
+              size="small"
+              sx={{
+                position: 'absolute',
+                bottom: 16,
+                right: 16,
+                background: 'rgba(0, 0, 0, 0.7)',
+                color: 'white',
+                fontWeight: 500,
+                fontSize: '0.7rem',
+                height: 20,
+              }}
+            />
+          )}
 
           {/* Play button for videos */}
           {story.category.toLowerCase() === 'video' && (
@@ -396,19 +531,52 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
             variant="body2"
             sx={{
               color: theme.palette.text.secondary,
-              mb: 3,
+              mb: 2,
               lineHeight: 1.6,
               display: '-webkit-box',
-              WebkitLineClamp: 3,
+              WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              minHeight: '4.8em',
+              minHeight: '3.2em',
               transform: isHovered ? 'translateZ(10px)' : 'translateZ(0px)',
               transition: 'transform 0.3s ease',
             }}
           >
             {story.description}
           </Typography>
+
+          {/* ✅ Tags from Backend */}
+          {story.tags && story.tags.length > 0 && (
+            <Box sx={{ mb: 2, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              {story.tags.slice(0, 2).map((tag, index) => (
+                <Chip
+                  key={index}
+                  label={tag}
+                  size="small"
+                  sx={{
+                    background: `${categoryColor}10`,
+                    color: categoryColor,
+                    fontSize: '0.65rem',
+                    height: 20,
+                    fontWeight: 500,
+                  }}
+                />
+              ))}
+              {story.tags.length > 2 && (
+                <Chip
+                  label={`+${story.tags.length - 2}`}
+                  size="small"
+                  sx={{
+                    background: `${categoryColor}10`,
+                    color: categoryColor,
+                    fontSize: '0.65rem',
+                    height: 20,
+                    fontWeight: 500,
+                  }}
+                />
+              )}
+            </Box>
+          )}
 
           {/* Footer */}
           <Box
@@ -421,11 +589,8 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
               transition: 'transform 0.3s ease',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CalendarTodayIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-              <Typography variant="caption" color="text.secondary">
-                {story.date}
-              </Typography>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              {getMetaInfo()}
             </Box>
 
             <IconButton
@@ -433,6 +598,7 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
               sx={{
                 color: categoryColor,
                 background: `${categoryColor}15`,
+                ml: 1,
                 '&:hover': {
                   background: `${categoryColor}30`,
                   transform: 'translateX(4px)',
@@ -490,15 +656,144 @@ const StyledTab = ({ label, icon, ...props }) => (
   />
 );
 
-// Main Component
+// ✅ Main Component with Complete Backend Integration - HOOKS FIXED
 const SustainabilityStories = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [selectedTab, setSelectedTab] = useState(0);
-  
- const [visibleElements, setVisibleElements] = useState({});
-  const containerRef = useRef(null);
+  const [visibleElements, setVisibleElements] = useState({});
 
+  // ✅ Backend state management
+  const [allStories, setAllStories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const socketRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const containerRef = useRef(null);
+  const navigate = useNavigate();
+
+  const categories = ['All', 'Blog', 'Video', 'Resources'];
+  
+  const categoryColors = {
+    'All': theme.palette.primary.main,
+    'Blog': '#1AC99F',
+    'Video': '#3498db',
+    'Resources': '#2E8B8B'
+  };
+
+  // ✅ Filtered stories logic
+  const filteredStories = selectedTab === 0
+    ? allStories
+    : allStories.filter(story => story.category === categories[selectedTab]);
+
+  // ✅ Fetch stories from backend
+  const fetchStories = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data } = await axios.get(API_URL, {
+        params: {
+          status: 'published',
+          limit: 50, // Get more stories for carousel
+          sort: '-createdAt'
+        }
+      });
+      
+      if (data?.success) {
+        setAllStories(data.data.stories || []);
+        setError(null);
+      }
+    } catch (err) {
+      console.error('Failed to fetch stories:', err);
+      setError('Failed to load stories');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleNext = useCallback(() => {
+    setCurrentIndex(prev =>
+      (prev + 1) % Math.max(filteredStories.length, 1)
+    );
+  }, [filteredStories.length]);
+
+  const handlePrev = useCallback(() => {
+    setCurrentIndex(prev =>
+      (prev - 1 + Math.max(filteredStories.length, 1)) % Math.max(filteredStories.length, 1)
+    );
+  }, [filteredStories.length]);
+
+  // ✅ FIXED: All useEffect hooks BEFORE any early returns
+  // Socket.IO real-time connection
+  useEffect(() => {
+    fetchStories();
+
+    // Initialize socket connection
+    console.log('🔌 Connecting to Stories Socket...');
+    const socket = io(API_BASE, {
+      transports: ['websocket'],
+      upgrade: true,
+      rememberUpgrade: true,
+    });
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('✅ Socket Connected:', socket.id);
+      socket.emit('join-story-room', 'sustainabilityStories');
+    });
+
+    // ✅ Real-time event listeners
+    socket.on('story-created', (payload) => {
+      if (payload?.success) {
+        setAllStories(prev => [payload.data, ...prev]);
+        console.log('📝 New story added:', payload.data.title);
+      }
+    });
+
+    socket.on('story-updated', (payload) => {
+      if (payload?.success) {
+        setAllStories(prev => 
+          prev.map(story => 
+            story._id === payload.data._id ? payload.data : story
+          )
+        );
+        console.log('✏️ Story updated:', payload.data.title);
+      }
+    });
+
+    socket.on('story-deleted', (payload) => {
+      setAllStories(prev => 
+        prev.filter(story => story._id !== payload.storyId)
+      );
+      console.log('🗑️ Story deleted:', payload.title);
+    });
+
+    socket.on('story-engagement', (payload) => {
+      if (payload.storyId) {
+        setAllStories(prev =>
+          prev.map(story =>
+            story._id === payload.storyId
+              ? {
+                  ...story,
+                  likes: payload.likes ?? story.likes,
+                  views: payload.views ?? story.views,
+                  downloadCount: payload.downloadCount ?? story.downloadCount,
+                }
+              : story
+          )
+        );
+      }
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [fetchStories]);
+
+  // Animation timers
   useEffect(() => {
     const timers = [
       setTimeout(() => setVisibleElements(prev => ({ ...prev, header: true })), 300),
@@ -509,111 +804,84 @@ const SustainabilityStories = () => {
     return () => timers.forEach(clearTimeout);
   }, []);
 
-  // Stories data
-  const allStories = [
-    {
-      id: 1,
-      title: "Building Climate Resilience in Supply Chains",
-      description: "Strategies for creating robust supply chains in the face of growing climate challenges.",
-      category: "Blog",
-      image: "https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=400&h=300&fit=crop",
-      date: "May 10, 2025",
-      link: "/blog/climate-resilience-supply-chains"
-    },
-    {
-      id: 2,
-      title: "Future of Carbon Markets",
-      description: "Expert analysis on the evolution of global carbon markets and what it means for businesses.",
-      category: "Video",
-      image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=300&fit=crop",
-      date: "April 28, 2025",
-      link: "/videos/carbon-markets-future"
-    },
-    {
-      id: 3,
-      title: "ESG Reporting: CSRD Implementation Guide",
-      description: "Step-by-step guide to implementing CSRD requirements for European operations.",
-      category: "Resources",
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=300&fit=crop",
-      date: "April 15, 2025",
-      link: "/resources/csrd-implementation-guide"
-    },
-    {
-      id: 4,
-      title: "AI in Decarbonization Strategy",
-      description: "How AI is transforming corporate decarbonization roadmaps and implementation.",
-      category: "Blog",
-      image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=300&fit=crop",
-      date: "April 5, 2025",
-      link: "/blog/ai-decarbonization-strategy"
-    },
-    {
-      id: 5,
-      title: "Net Zero Pathways for Manufacturing",
-      description: "Comprehensive strategies for achieving net zero emissions in manufacturing sectors.",
-      category: "Video",
-      image: "https://images.unsplash.com/photo-1565043666747-69f6646db940?w=400&h=300&fit=crop",
-      date: "March 22, 2025",
-      link: "/videos/net-zero-manufacturing"
-    },
-    {
-      id: 6,
-      title: "Sustainability Metrics Dashboard Template",
-      description: "Free template for tracking and visualizing key sustainability performance indicators.",
-      category: "Resources",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
-      date: "March 18, 2025",
-      link: "/resources/sustainability-dashboard"
-    }
-  ];
-const [currentIndex, setCurrentIndex] = useState(() => 
-   Math.ceil(allStories.length / 2) - 1
-   );  
-  const categories = ['All', 'Blog', 'Video', 'Resources'];
-  
-  const categoryColors = {
-    'All': theme.palette.primary.main,
-    'Blog': '#1AC99F',
-    'Video': '#3498db',
-    'Resources': '#2E8B8B'
-  };
-
-  const filteredStories = selectedTab === 0 
-    ? allStories 
-    : allStories.filter(story => story.category === categories[selectedTab]);
-
- const handleTabChange = (event, newValue) => {
-  setSelectedTab(newValue);
-  const filtered = newValue === 0
-    ? allStories
-    : allStories.filter(story => story.category === categories[newValue]);
-  // reset to the middle of the new filtered list
-  setCurrentIndex(Math.ceil(filtered.length / 2) - 1);
-};
-
-  const handleNext = () => {
-  // wrap around with modulo so it always loops
-  setCurrentIndex(prev =>
-    (prev + 1) % filteredStories.length
-  );
-};
-
- const handlePrev = () => {
-  setCurrentIndex(prev =>
-    (prev - 1 + filteredStories.length) % filteredStories.length
-  );
-};
-
-  // Auto-scroll for desktop
+  // ✅ FIXED: Auto-scroll useEffect moved before early returns
   useEffect(() => {
-    if (isMobile) return;
+    if (isMobile || filteredStories.length === 0) return;
 
     const interval = setInterval(() => {
       handleNext();
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [currentIndex, filteredStories.length, isMobile]);
+  }, [isMobile, filteredStories.length, handleNext]);
+
+  // ✅ NOW early returns are AFTER all hooks
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue);
+    setCurrentIndex(0); // Reset to first item when changing tabs
+  };
+
+  const handleViewAllClick = () => {
+    const categoryPath = categories[selectedTab].toLowerCase();
+    if (categoryPath === 'all') {
+      navigate('/sustainability-stories');
+    } else {
+      navigate(`/sustainability-stories/${categoryPath}`);
+    }
+  };
+
+  // ✅ Loading and error states
+  if (loading) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
+        <CircularProgress size={60} sx={{ mb: 2 }} />
+        <Typography variant="h6" color="text.secondary">
+          Loading sustainability stories...
+        </Typography>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
+        <Typography variant="h6" color="error" gutterBottom>
+          {error}
+        </Typography>
+        <Button onClick={fetchStories} variant="contained" sx={{ mt: 2 }}>
+          Retry Loading
+        </Button>
+      </Container>
+    );
+  }
+
+  // ✅ Empty state handling
+  if (allStories.length === 0) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
+        <Typography variant="h6" color="text.secondary" gutterBottom>
+          No sustainability stories available yet.
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Check back later for new content!
+        </Typography>
+      </Container>
+    );
+  }
+
+  // If filtered stories is empty, show message
+  if (filteredStories.length === 0) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
+        <Typography variant="h6" color="text.secondary" gutterBottom>
+          No {categories[selectedTab].toLowerCase()} stories available yet.
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Try selecting a different category or check back later.
+        </Typography>
+      </Container>
+    );
+  }
 
   return (
     <Box
@@ -730,6 +998,7 @@ const [currentIndex, setCurrentIndex] = useState(() =>
             >
               <IconButton
                 onClick={handlePrev}
+                disabled={filteredStories.length <= 1}
                 sx={{
                   background: 'rgba(255, 255, 255, 0.9)',
                   backdropFilter: 'blur(10px)',
@@ -737,6 +1006,9 @@ const [currentIndex, setCurrentIndex] = useState(() =>
                   '&:hover': {
                     background: 'rgba(255, 255, 255, 1)',
                     transform: 'translateX(-4px)',
+                  },
+                  '&:disabled': {
+                    opacity: 0.5,
                   },
                   transition: 'all 0.3s ease',
                 }}
@@ -758,6 +1030,7 @@ const [currentIndex, setCurrentIndex] = useState(() =>
 
               <IconButton
                 onClick={handleNext}
+                disabled={filteredStories.length <= 1}
                 sx={{
                   background: 'rgba(255, 255, 255, 0.9)',
                   backdropFilter: 'blur(10px)',
@@ -765,6 +1038,9 @@ const [currentIndex, setCurrentIndex] = useState(() =>
                   '&:hover': {
                     background: 'rgba(255, 255, 255, 1)',
                     transform: 'translateX(4px)',
+                  },
+                  '&:disabled': {
+                    opacity: 0.5,
                   },
                   transition: 'all 0.3s ease',
                 }}
@@ -793,7 +1069,7 @@ const [currentIndex, setCurrentIndex] = useState(() =>
 
                 return (
                   <Box
-                    key={story.id}
+                    key={story._id}
                     sx={{
                       position: 'absolute',
                       transform: isMobile && !isActive ? 'scale(0)' : `
@@ -860,6 +1136,7 @@ const [currentIndex, setCurrentIndex] = useState(() =>
               }}
             >
               <button
+                onClick={handleViewAllClick}
                 style={{
                   padding: '14px 40px',
                   fontSize: '16px',
