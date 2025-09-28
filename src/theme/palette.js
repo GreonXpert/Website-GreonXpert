@@ -5,6 +5,7 @@ const palette = {
     light: '#4EDCB9',
     dark: '#0E9A78',
     contrastText: '#ffffff',
+    aa:'#23b399'
   },
   secondary: {
     main: '#2E8B8B', // Teal shade

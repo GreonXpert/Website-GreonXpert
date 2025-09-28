@@ -1,4 +1,4 @@
-// src/components/Teams/Teams.jsx
+// src/components/Teams/Teams.jsx - UPDATED WITH CONSISTENT STYLING
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
@@ -23,6 +23,7 @@ import { motion, AnimatePresence, m } from 'framer-motion';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import CloseIcon from '@mui/icons-material/Close';
+import CheckCircle from '@mui/icons-material/CheckCircle';
 import axios from 'axios';
 import io from 'socket.io-client';
 import {API_BASE} from '../../utils/api';
@@ -36,9 +37,24 @@ const fadeInUp = keyframes`
 `;
 
 const glowAnimation = keyframes`
-  0% { box-shadow: 0 0 5px rgba(26,201,159,0.3); }
-  50% { box-shadow: 0 0 20px rgba(26,201,159,0.6), 0 0 30px rgba(26,201,159,0.4); }
-  100% { box-shadow: 0 0 5px rgba(26,201,159,0.3); }
+  0% { box-shadow: 0 0 15px rgba(26, 201, 159, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(26, 201, 159, 0.4), 0 0 35px rgba(26, 201, 159, 0.2); }
+  100% { box-shadow: 0 0 15px rgba(26, 201, 159, 0.2); }
+`;
+
+const floatAnimation = keyframes`
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% { 
+    transform: translateY(-8px) rotate(0.3deg);
+  }
+  50% { 
+    transform: translateY(-12px) rotate(0deg);
+  }
+  75% { 
+    transform: translateY(-8px) rotate(-0.3deg);
+  }
 `;
 
 /* Desktop 3D Layout Helpers */
@@ -55,15 +71,61 @@ const zByOffset = { 0: 100, 5: 60, 1: 55, 4: 40, 2: 35, 3: 20 };
 const sizeByOffset = (offset) => (offset === 0 ? { w: 200, h: 260 } : { w: 180, h: 240 });
 const getOffset = (index, activeIndex, len) => ((index - activeIndex) % len + len) % len;
 
-/* ===================== Background Colors for Center Changes ===================== */
-const backgroundColors = [
-  '#F0FDFB', // Very light tint of primary (#1AC99F) - almost white with hint of turquoise
-  '#E6FFFA', // Light tint of primary - subtle turquoise background
-  '#F0FDFA', // Another primary tint - very light mint
-  '#F7FFFE', // Ultra light primary tint - barely visible turquoise
-  '#F3FFFE', // Light secondary tint (#2E8B8B) - subtle teal
-  '#EDF9F9', // Light secondary variation - soft teal background
-];
+/* ===================== Floating Particle Component ===================== */
+const FloatingParticle = ({ delay = 0, size = 3, color = '#1AC99F', top, left }) => (
+  <div
+    style={{
+      position: 'absolute',
+      top,
+      left,
+      width: `${size}px`,
+      height: `${size}px`,
+      background: color,
+      borderRadius: '50%',
+      opacity: 0.4,
+      animation: `${floatAnimation} ${8 + Math.random() * 4}s ease-in-out infinite`,
+      animationDelay: `${delay}s`,
+      filter: `blur(${size > 4 ? 1 : 0.5}px)`,
+    }}
+  />
+);
+
+/* ===================== Typewriter Text Component ===================== */
+const TypewriterText = ({ text, delay = 0, speed = 50 }) => {
+  const [displayText, setDisplayText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsTyping(true), delay);
+    return () => clearTimeout(timer);
+  }, [delay]);
+
+  useEffect(() => {
+    if (!isTyping) return;
+    if (currentIndex < text.length) {
+      const timer = setTimeout(() => {
+        setDisplayText((prev) => prev + text[currentIndex]);
+        setCurrentIndex((prev) => prev + 1);
+      }, speed);
+      return () => clearTimeout(timer);
+    }
+  }, [currentIndex, text, speed, isTyping]);
+
+  return (
+    <span>
+      {displayText}
+      {isTyping && currentIndex < text.length && (
+        <span
+          style={{
+            borderRight: '1px solid #1AC99F',
+            animation: 'blinkCursor 1s infinite',
+          }}
+        />
+      )}
+    </span>
+  );
+};
 
 /* ===================== Team Detail Dialog ===================== */
 const TeamDetailDialog = ({ open, onClose, member }) => {
@@ -506,10 +568,11 @@ const Teams = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
-  // ✅ NEW: State for fetched team data
+  // State for fetched team data
   const [team, setTeam] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [scrollScale, setScrollScale] = useState(1);
   
   const len = team.length;
   
@@ -525,7 +588,20 @@ const Teams = () => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // ✅ NEW: Fetch team data from backend
+  // Scroll scale effect (like other components)
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const maxScroll = 200;
+      const scale = Math.max(0.9, 1 - (scrollY / maxScroll) * 0.1);
+      setScrollScale(scale);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Fetch team data from backend
   useEffect(() => {
     const fetchTeamData = async () => {
       try {
@@ -557,7 +633,7 @@ const Teams = () => {
     fetchTeamData();
   }, []);
 
-  // ✅ NEW: Real-time updates via Socket.IO
+  // Real-time updates via Socket.IO
   useEffect(() => {
     const socket = io(API_BASE);
     socket.emit('join-team-room', 'team-public');
@@ -570,9 +646,6 @@ const Teams = () => {
 
     return () => socket.disconnect();
   }, []);
-
-  // Dynamic background color based on center member
-  const currentBgColor = backgroundColors[activeIndex % backgroundColors.length];
 
   // Auto-rotation
   useEffect(() => {
@@ -608,13 +681,19 @@ const Teams = () => {
     setSelectedMember(null);
   };
 
-  // ✅ NEW: Loading state
+  // Loading state
   if (loading) {
     return (
       <Box
         sx={{
+          py: { xs: 4, sm: 6, md: 8 },
           minHeight: '100vh',
-          backgroundColor: backgroundColors[0],
+          background: `
+            radial-gradient(circle at 15% 25%, rgba(26, 201, 159, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 85% 75%, rgba(46, 139, 139, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(52, 152, 219, 0.03) 0%, transparent 70%),
+            linear-gradient(135deg, #f8f9fa 0%, rgba(248, 249, 250, 0.3) 100%)
+          `,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -633,13 +712,19 @@ const Teams = () => {
     );
   }
 
-  // ✅ NEW: Error state
+  // Error state
   if (error) {
     return (
       <Box
         sx={{
+          py: { xs: 4, sm: 6, md: 8 },
           minHeight: '100vh',
-          backgroundColor: backgroundColors[0],
+          background: `
+            radial-gradient(circle at 15% 25%, rgba(26, 201, 159, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 85% 75%, rgba(46, 139, 139, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(52, 152, 219, 0.03) 0%, transparent 70%),
+            linear-gradient(135deg, #f8f9fa 0%, rgba(248, 249, 250, 0.3) 100%)
+          `,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -664,13 +749,19 @@ const Teams = () => {
     );
   }
 
-  // ✅ NEW: Empty state
+  // Empty state
   if (team.length === 0) {
     return (
       <Box
         sx={{
+          py: { xs: 4, sm: 6, md: 8 },
           minHeight: '100vh',
-          backgroundColor: backgroundColors[0],
+          background: `
+            radial-gradient(circle at 15% 25%, rgba(26, 201, 159, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 85% 75%, rgba(46, 139, 139, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(52, 152, 219, 0.03) 0%, transparent 70%),
+            linear-gradient(135deg, #f8f9fa 0%, rgba(248, 249, 250, 0.3) 100%)
+          `,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -689,150 +780,269 @@ const Teams = () => {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        backgroundColor: currentBgColor,
-        color: '#374151',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        px: 2,
-        pt: { xs: 8, md: 16 },
-        pb: 4,
-        transition: 'background-color 0.8s ease',
-      }}
-    >
-      <Container maxWidth="xl">
-        <Box sx={{ textAlign: 'center', width: '100%', maxWidth: '1152px', mx: 'auto' }}>
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Typography
-              variant="h1"
-              sx={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: { xs: '2.5rem', md: '4rem', lg: '5rem' },
-                fontWeight: 700,
-                lineHeight: 1.1,
-                color: '#1f2937',
-                mb: 1,
-              }}
-            >
-              Meet Our Amazing Team
-            </Typography>
-            <Typography
-              variant="h1"
-              sx={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: { xs: '2rem', md: '3rem', lg: '4rem' },
-                fontWeight: 700,
-                lineHeight: 1.1,
-                color: '#1f2937',
-                mb: 3,
-              }}
-            >
-              Supercharge Your Workflow
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                mt: 3,
-                fontSize: { xs: '1rem', md: '1.125rem' },
-                color: '#6b7280',
-                maxWidth: '512px',
-                mx: 'auto',
-                lineHeight: 1.6,
-                fontFamily: "'Roboto', sans-serif",
-              }}
-            >
-              All-in-one platform to plan, collaborate, and deliver — faster and smarter.
-            </Typography>
-          </motion.div>
+    <>
+      <style>{`
+        ${floatAnimation}
+        
+        @keyframes blinkCursor {
+          0%, 50% { border-color: transparent; }
+          51%, 100% { border-color: #1AC99F; }
+        }
+        
+        .gradient-text {
+          background: linear-gradient(135deg, #1AC99F, #2E8B8B);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+      `}</style>
 
-          {/* Desktop: 3D Carousel */}
-          {!isMobile && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              <Box
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                sx={{
-                  mt: 12,
-                  height: 380,
-                  position: 'relative',
-                  perspective: '1200px',
-                  maxWidth: 1000,
-                  mx: 'auto',
-                }}
+      <Box
+        sx={{
+          py: { xs: 4, sm: 6, md: 8 },
+          minHeight: '100vh',
+          background: `
+            radial-gradient(circle at 15% 25%, rgba(26, 201, 159, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 85% 75%, rgba(46, 139, 139, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(52, 152, 219, 0.03) 0%, transparent 70%),
+            linear-gradient(135deg, #f8f9fa 0%, rgba(248, 249, 250, 0.3) 100%)
+          `,
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Floating particles - Same as AdvisoryBoard */}
+        {[...Array(10)].map((_, i) => (
+          <FloatingParticle
+            key={i}
+            delay={i * 0.5}
+            size={Math.random() * 6 + 2}
+            color={i % 3 === 0 ? '#1AC99F' : i % 3 === 1 ? '#3498db' : '#e74c3c'}
+            top={`${Math.random() * 100}%`}
+            left={`${Math.random() * 100}%`}
+          />
+        ))}
+
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+          <Box sx={{ textAlign: 'center', width: '100%', maxWidth: '1000px', mx: 'auto' }}>
+            {/* Header Section - Updated to match AdvisoryBoard styling */}
+            <Box sx={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+              {/* Badge */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                style={{ marginBottom: '1.5rem' }}
               >
-                <NavigationArrow direction="left" onClick={prev} />
-                <NavigationArrow direction="right" onClick={next} />
-                
-                <Box
-                  sx={{
-                    transformStyle: 'preserve-3d',
-                    display: 'flex',
-                    justifyContent: 'center',
+                <div
+                  style={{
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    padding: '2rem 0',
-                    position: 'relative',
-                    height: '100%',
-                    transition: 'all 0.5s ease',
+                    gap: '0.4rem',
+                    background: 'linear-gradient(135deg, rgba(26, 201, 159, 0.1), rgba(46, 139, 139, 0.1))',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '30px',
+                    border: '1px solid rgba(26, 201, 159, 0.3)',
+                    backdropFilter: 'blur(8px)',
+                    animation: `${floatAnimation} 6s ease-in-out infinite`,
+                    transform: `scale(${scrollScale})`,
+                    transition: 'transform 0.3s ease',
                   }}
                 >
-                  {team.map((member, index) => {
-                    const offset = getOffset(index, activeIndex, len);
-                    return (
-                      <TeamImage
-                        key={member._id}
-                        image={member}
-                        offset={offset}
-                        hovered={hoveredOffset}
-                        onHover={setHoveredOffset}
-                        onLeave={() => setHoveredOffset(null)}
+                  <CheckCircle size={12} style={{ color: '#1AC99F' }} />
+                  <span style={{ color: '#1AC99F', fontWeight: 600, fontSize: '0.6rem' }}>
+                    Meet Our Amazing Team
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* Main Headline - Updated to match AdvisoryBoard */}
+              <h1
+                style={{
+                  fontSize: 'clamp(1.5rem, 4vw, 2.8rem)',
+                  fontWeight: 900,
+                  lineHeight: 1.1,
+                  marginBottom: '1rem',
+                  color: '#1e293b',
+                  letterSpacing: '-0.02em',
+                  transform: `scale(${scrollScale})`,
+                  transition: 'transform 0.3s ease',
+                }}
+              >
+                <TypewriterText text="Meet the " delay={500} speed={80} />
+                <br />
+                <span className="gradient-text">
+                  <TypewriterText text="GreonXpert Team" delay={1800} speed={80} />
+                </span>
+              </h1>
+
+              {/* Subtitle - Updated to match AdvisoryBoard */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                style={{ marginBottom: '1.5rem' }}
+              >
+                <h2
+                  style={{
+                    fontSize: 'clamp(1rem, 2.5vw, 1.4rem)',
+                    fontWeight: 600,
+                    color: '#1e293b',
+                    marginBottom: '0.8rem',
+                    transform: `scale(${scrollScale})`,
+                    transition: 'transform 0.3s ease',
+                  }}
+                >
+                  Supercharge Your Workflow
+                </h2>
+              </motion.div>
+
+              {/* Description - Updated styling */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+                style={{ marginBottom: '2rem' }}
+              >
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem', lg: '1rem' },
+                    color: '#64748b',
+                    opacity: 0.8,
+                    lineHeight: 1.6,
+                    maxWidth: '600px',
+                    mx: 'auto',
+                    transform: `scale(${scrollScale})`,
+                    transition: 'transform 0.3s ease',
+                  }}
+                >
+                  All-in-one platform to plan, collaborate, and deliver — faster and smarter with our expert team of sustainability professionals.
+                </Typography>
+              </motion.div>
+            </Box>
+
+            {/* Desktop: 3D Carousel */}
+            {!isMobile && (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.9 }}
+              >
+                <Box
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  sx={{
+                    mt: 8,
+                    height: 380,
+                    position: 'relative',
+                    perspective: '1200px',
+                    maxWidth: 1000,
+                    mx: 'auto',
+                  }}
+                >
+                  <NavigationArrow direction="left" onClick={prev} />
+                  <NavigationArrow direction="right" onClick={next} />
+                  
+                  <Box
+                    sx={{
+                      transformStyle: 'preserve-3d',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '2rem 0',
+                      position: 'relative',
+                      height: '100%',
+                      transition: 'all 0.5s ease',
+                    }}
+                  >
+                    {team.map((member, index) => {
+                      const offset = getOffset(index, activeIndex, len);
+                      return (
+                        <TeamImage
+                          key={member._id}
+                          image={member}
+                          offset={offset}
+                          hovered={hoveredOffset}
+                          onHover={setHoveredOffset}
+                          onLeave={() => setHoveredOffset(null)}
+                          onMoreClick={handleMoreClick}
+                        />
+                      );
+                    })}
+                  </Box>
+                </Box>
+              </motion.div>
+            )}
+
+            {/* Mobile: 2 per row grid */}
+            {isMobile && (
+              <Box sx={{ mt: 6 }}>
+                <Grid container spacing={2} justifyContent="center">
+                  {team.map((member, index) => (
+                    <Grid item xs={6} key={member._id}>
+                      <MobileTeamCard 
+                        image={member} 
+                        index={index}
                         onMoreClick={handleMoreClick}
                       />
-                    );
-                  })}
-                </Box>
+                    </Grid>
+                  ))}
+                </Grid>
               </Box>
-            </motion.div>
-          )}
+            )}
+          </Box>
+        </Container>
 
-          {/* Mobile: 2 per row grid */}
-          {isMobile && (
-            <Box sx={{ mt: 8 }}>
-              <Grid container spacing={2} justifyContent="center">
-                {team.map((member, index) => (
-                  <Grid item xs={6} key={member._id}>
-                    <MobileTeamCard 
-                      image={member} 
-                      index={index}
-                      onMoreClick={handleMoreClick}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          )}
-        </Box>
-      </Container>
+        {/* Team Detail Dialog */}
+        <TeamDetailDialog
+          open={dialogOpen}
+          onClose={handleDialogClose}
+          member={selectedMember}
+        />
 
-      {/* Team Detail Dialog */}
-      <TeamDetailDialog
-        open={dialogOpen}
-        onClose={handleDialogClose}
-        member={selectedMember}
-      />
-    </Box>
+        {/* Decorative Elements - Same as AdvisoryBoard */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '15%',
+            right: '8%',
+            width: '80px',
+            height: '80px',
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, rgba(26, 201, 159, 0.15), rgba(46, 139, 139, 0.15))',
+            animation: `${floatAnimation} 10s ease-in-out infinite`,
+            opacity: 0.3,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '15%',
+            left: '5%',
+            width: '60px',
+            height: '60px',
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, rgba(46, 139, 139, 0.15), rgba(26, 201, 159, 0.15))',
+            animation: `${floatAnimation} 8s ease-in-out infinite reverse`,
+            opacity: 0.3,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            top: '60%',
+            right: '15%',
+            width: '30px',
+            height: '30px',
+            borderRadius: '50%',
+            background: 'linear-gradient(45deg, rgba(26, 201, 159, 0.2), rgba(46, 139, 139, 0.2))',
+            animation: `${floatAnimation} 6s ease-in-out infinite`,
+            opacity: 0.25,
+          }}
+        />
+      </Box>
+    </>
   );
 };
 

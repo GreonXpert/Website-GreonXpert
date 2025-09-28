@@ -23,6 +23,11 @@ import ProjectDetail from './components/Project/ProjectDetail';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/Terms&Service';
+import CookiePolicy from './pages/CookiePolicy';
+import FAQPage from './pages/Faq';
+import CareerPage from './pages/Career';
 
 function App() {
   return (
@@ -50,6 +55,13 @@ function App() {
                 <Route path="/sustainability-stories" element={<SustainabilityStoryPage />} />
                 <Route path="/sustainability-stories/:category" element={<SustainabilityStoryPage />} />
                 <Route path="/sustainability-stories/:category/:storyId" element={<SustainabilityStoryPage />} />
+
+                <Route path="/privacy-policy" element={<PrivacyPolicy/>}/>
+                <Route path='/terms' element={<TermsAndConditions/>}/>
+                <Route path='/cookie-policy' element={<CookiePolicy/>}/>
+                <Route path="/faq" element={<FAQPage/>}/>
+                <Route path='/careers' element={<CareerPage/>}/>
+
               </Routes>
             </Box>
             <Footer />

@@ -7,7 +7,9 @@ import {
   useTheme,
   useMediaQuery,
   Fade,
-  Chip
+  Chip,
+  Grow,
+  Zoom
 } from '@mui/material';
 import { keyframes } from '@emotion/react';
 import io from 'socket.io-client';
@@ -61,6 +63,8 @@ const PoweredByScience = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isPaused, setIsPaused] = useState(false);
+  const [visibleItems, setVisibleItems] = useState({});
+  const [scrollScale, setScrollScale] = useState(1);
 
   // DB-driven categories
   const [categories, setCategories] = useState([]); // [{_id, name, description}]
@@ -95,13 +99,34 @@ const PoweredByScience = () => {
     };
     loadData();
 
+    // Fade effect timers similar to TrustedByLeaders
+    const timer = setTimeout(() => {
+      setVisibleItems({ header: true });
+    }, 300);
+
+    const timer2 = setTimeout(() => {
+      setVisibleItems(prev => ({ ...prev, chips: true }));
+    }, 600);
+
+    const timer3 = setTimeout(() => {
+      setVisibleItems(prev => ({ ...prev, frameworks: true }));
+    }, 900);
+
+    // Scroll scale effect similar to TrustedByLeaders
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const maxScroll = 300;
+      const scale = Math.max(0.8, 1 - (scrollY / maxScroll) * 0.2);
+      setScrollScale(scale);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
     // sockets
     const socket = io(API_BASE);
-    // server should place sockets into 'poweredByScience' room on connect
     socket.on('pbs-categories-updated', (payload) => {
       if (payload?.success && Array.isArray(payload.data)) {
         setCategories(payload.data);
-        // keep a valid selection if the current one was removed
         if (payload.data.length > 0) {
           const stillExists = payload.data.some(c => c._id === selectedCategoryId);
           if (!stillExists) setSelectedCategoryId(payload.data[0]._id);
@@ -115,8 +140,14 @@ const PoweredByScience = () => {
         setFrameworks(payload.data);
       }
     });
-    return () => socket.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      window.removeEventListener('scroll', handleScroll);
+      socket.disconnect();
+    };
   }, []);
 
   // Build chip models from DB categories
@@ -142,19 +173,22 @@ const PoweredByScience = () => {
   // Duplicate for seamless marquee
   const duplicatedFrameworks = [...uiFrameworks, ...uiFrameworks];
 
-  // Selected category’s description (from DB)
+  // Selected category's description (from DB)
   const selectedDescription = categories.find(c => c._id === selectedCategoryId)?.description || '';
 
   return (
     <Box
       sx={{
-        py: { xs: 6, md: 8 },
+        py: { xs: 2, sm: 3, md: 4 }, // Reduced spacing similar to TrustedByLeaders
         background: `linear-gradient(180deg, 
           ${theme.palette.background.default} 0%, 
           rgba(26, 201, 159, 0.03) 50%,
           ${theme.palette.background.default} 100%)`,
         position: 'relative',
         overflow: 'hidden',
+        minHeight: { xs: 'auto', md: '90vh' }, // Reduced height
+        display: 'flex',
+        alignItems: 'center',
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -168,30 +202,41 @@ const PoweredByScience = () => {
         }
       }}
     >
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+      <Container 
+        maxWidth="xl" 
+        sx={{ 
+          position: 'relative', 
+          zIndex: 1,
+          width: '100%',
+          px: { xs: 1.5, sm: 2, md: 3 }, // Reduced horizontal padding
+        }}
+      >
         {/* Header */}
-        <Fade in timeout={800}>
-          <Box textAlign="center" mb={6}>
+        <Fade in={visibleItems.header} timeout={800}>
+          <Box textAlign="center" mb={{ xs: 2, sm: 3, md: 4 }}> {/* Reduced margin */}
             <Box
               sx={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 1,
-                mb: 2,
-                p: 1,
-                px: 2,
+                mb: 1.5, // Reduced margin
+                p: 0.8, // Reduced padding
+                px: 1.5,
                 borderRadius: 20,
                 background: 'rgba(26, 201, 159, 0.1)',
                 border: '1px solid rgba(26, 201, 159, 0.2)',
+                transform: `scale(${scrollScale})`,
+                transition: 'transform 0.3s ease',
               }}
             >
-              <ScienceIcon sx={{ color: theme.palette.primary.main, fontSize: 20 }} />
+              <ScienceIcon sx={{ color: theme.palette.primary.main, fontSize: 16 }} /> {/* Reduced icon size */}
               <Typography
                 variant="overline"
                 sx={{
                   color: theme.palette.primary.main,
                   fontWeight: 600,
                   letterSpacing: 1.5,
+                  fontSize: { xs: '0.4rem', sm: '0.45rem', md: '0.5rem' }, // Using typography config
                 }}
               >
                 Powered by Science
@@ -199,99 +244,121 @@ const PoweredByScience = () => {
             </Box>
 
             <Typography
-              variant="h4"
+              variant="h2"
               component="h2"
               sx={{
                 fontWeight: 700,
-                color: theme.palette.text.primary,
-                mb: 2,
-                fontSize: { xs: '1.75rem', md: '2.5rem' },
+                mb: 1.5, // Reduced margin
+                fontSize: { 
+                  xs: '1.4rem', 
+                  sm: '1.7rem', 
+                  md: '2.1rem', 
+                  lg: '2.4rem' 
+                }, // Similar to TrustedByLeaders
+                textAlign: 'center',
+                lineHeight: 1.2,
+                transform: `scale(${scrollScale})`,
+                transition: 'transform 0.3s ease',
+                px: { xs: 0.5, sm: 1 },
+                color: theme.palette.secondary.light,
               }}
             >
-              Aligned with Globally Recognized
+              Grounded In Research
               <br />
-              <span style={{
+              {/* <span style={{
                 background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}>
                 Scientific Frameworks
-              </span>
+              </span> */}
             </Typography>
 
             <Typography
-              variant="h6"
               color="text.secondary"
               sx={{
-                maxWidth: '700px',
+                maxWidth: { xs: '95%', sm: '85%', md: '600px' },
                 mx: 'auto',
-                fontSize: { xs: '1rem', md: '1.125rem' },
-                fontWeight: 400,
+                fontSize: { 
+                  xs: '0.75rem', 
+                  sm: '0.85rem', 
+                  md: '0.95rem', 
+                  lg: '1.2rem' 
+                }, // Similar to TrustedByLeaders
+                opacity: 0.8,
+                lineHeight: 1.4,
+                transform: `scale(${scrollScale})`,
+                transition: 'transform 0.3s ease',
+                px: { xs: 0.5, sm: 1 },
               }}
             >
-              Our platform is built on internationally accepted standards and methodologies,
-              ensuring accuracy, credibility, and compliance in every measurement
+              Our platform is built in alignment with globally recognized standards and scientific frameworks, enabling audit-ready compliance.
             </Typography>
           </Box>
         </Fade>
 
         {/* Category chips (from DB) */}
-        <Fade in timeout={1000}>
+        <Grow in={visibleItems.chips} timeout={1000}>
           <Box
             sx={{
-              mb: 4,
+              mb: 3, // Reduced margin
               display: 'flex',
               justifyContent: 'center',
               flexWrap: 'wrap',
-              gap: 2,
+              gap: 1.5, // Reduced gap
             }}
           >
-            {chips.map((chip) => (
-              <Chip
-                key={chip.id}
-                icon={chip.icon}
-                label={chip.label}
-                onClick={() => setSelectedCategoryId(chip.id)}
-                sx={{
-                  py: 2.5,
-                  px: 2,
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  background: selectedCategoryId === chip.id
-                    ? theme.palette.primary.main
-                    : 'rgba(26, 201, 159, 0.1)',
-                  border: selectedCategoryId === chip.id
-                    ? `2px solid ${theme.palette.primary.main}`
-                    : '1px solid rgba(26, 201, 159, 0.2)',
-                  color: selectedCategoryId === chip.id ? 'white' : theme.palette.primary.main,
-                  '& .MuiChip-icon': {
-                    color: selectedCategoryId === chip.id ? 'white' : theme.palette.primary.main,
-                  },
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer',
-                  '&:hover': {
+            {chips.map((chip, index) => (
+              <Zoom in timeout={1200 + index * 200} key={chip.id}>
+                <Chip
+                  icon={chip.icon}
+                  label={chip.label}
+                  onClick={() => setSelectedCategoryId(chip.id)}
+                  sx={{
+                    py: 2, // Reduced padding
+                    px: 1.5,
+                    fontSize: { xs: '0.6rem', sm: '0.7rem', md: '0.8rem' }, // Using typography-like sizing
+                    fontWeight: 600,
                     background: selectedCategoryId === chip.id
                       ? theme.palette.primary.main
-                      : 'rgba(26, 201, 159, 0.2)',
-                    transform: 'translateY(-2px)',
-                    boxShadow: `0 10px 20px ${theme.palette.primary.main}30`,
-                  }
-                }}
-              />
+                      : 'rgba(26, 201, 159, 0.1)',
+                    border: selectedCategoryId === chip.id
+                      ? `2px solid ${theme.palette.primary.main}`
+                      : '1px solid rgba(26, 201, 159, 0.2)',
+                    color: selectedCategoryId === chip.id ? 'white' : theme.palette.primary.main,
+                    '& .MuiChip-icon': {
+                      color: selectedCategoryId === chip.id ? 'white' : theme.palette.primary.main,
+                      fontSize: { xs: '14px', md: '16px' }, // Reduced icon size
+                    },
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer',
+                    transform: `scale(${scrollScale})`,
+                    '&:hover': {
+                      background: selectedCategoryId === chip.id
+                        ? theme.palette.primary.main
+                        : 'rgba(26, 201, 159, 0.2)',
+                      transform: `scale(${scrollScale * 1.05}) translateY(-2px)`,
+                      boxShadow: `0 10px 20px ${theme.palette.primary.main}30`,
+                    }
+                  }}
+                />
+              </Zoom>
             ))}
           </Box>
-        </Fade>
+        </Grow>
 
         {/* Category description (from DB) */}
-        <Fade in key={selectedCategoryId || 'none'} timeout={500}>
-          <Box textAlign="center" mb={4}>
+        <Fade in={visibleItems.chips && selectedCategoryId} key={selectedCategoryId || 'none'} timeout={500}>
+          <Box textAlign="center" mb={3}> {/* Reduced margin */}
             <Typography
               variant="body1"
               color="text.secondary"
               sx={{
-                fontSize: { xs: '0.9rem', md: '1rem' },
-                fontStyle: 'italic',
+                fontSize: { xs: '0.65rem', sm: '0.7rem', md: '1.05rem' }, // Using typography config
+                fontStyle: 'bold',
+                transform: `scale(${scrollScale})`,
+                transition: 'transform 0.3s ease',
               }}
             >
               {selectedDescription}
@@ -300,112 +367,123 @@ const PoweredByScience = () => {
         </Fade>
 
         {/* Scrolling framework logos (image only) */}
-        <Box
-          ref={containerRef}
-          sx={{
-            position: 'relative',
-            width: '100%',
-            overflow: 'hidden',
-            minHeight: { xs: 160, md: 180 },
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: '100px',
-              background: `linear-gradient(to right, ${theme.palette.background.default}, transparent)`,
-              zIndex: 2,
-              pointerEvents: 'none',
-            },
-            '&::after': {
-              content: '""',
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: '100px',
-              background: `linear-gradient(to left, ${theme.palette.background.default}, transparent)`,
-              zIndex: 2,
-              pointerEvents: 'none',
-            }
-          }}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-        >
-          {duplicatedFrameworks.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-              No frameworks in this category yet.
-            </Box>
-          ) : (
-            <Box
-              key={selectedCategoryId || 'all'}
-              sx={{
-                display: 'flex',
-                gap: 3,
-                alignItems: 'center',
-                animation: `${scrollAnimation} ${isMobile ? '30s' : '40s'} linear infinite`,
-                animationPlayState: isPaused ? 'paused' : 'running',
-                '&:hover': { animationPlayState: 'paused' }
-              }}
-            >
-              {duplicatedFrameworks.map((fw, idx) => (
-                <Box
-                  key={`${fw.id}-${idx}`}
-                  sx={{
-                    flexShrink: 0,
-                    minWidth: { xs: 180, md: 220 },
-                    height: { xs: 120, md: 140 },
-                    p: 0,
-                    m: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 2,
-                    transition: 'transform 0.25s ease',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      transform: 'translateY(-8px)',
-                      '& img': {
-                        animation: `${pulseAnimation} 1s ease-in-out`,
-                        boxShadow: `0 8px 24px ${fw.color}55`,
+        <Grow in={visibleItems.frameworks} timeout={1400}>
+          <Box
+            ref={containerRef}
+            sx={{
+              position: 'relative',
+              width: '100%',
+              overflow: 'hidden',
+              minHeight: { xs: 140, md: 160 }, // Reduced height
+              transform: `scale(${scrollScale})`,
+              transition: 'transform 0.3s ease',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: '100px',
+                background: `linear-gradient(to right, ${theme.palette.background.default}, transparent)`,
+                zIndex: 2,
+                pointerEvents: 'none',
+              },
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: '100px',
+                background: `linear-gradient(to left, ${theme.palette.background.default}, transparent)`,
+                zIndex: 2,
+                pointerEvents: 'none',
+              }
+            }}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            {duplicatedFrameworks.length === 0 ? (
+              <Box 
+                sx={{ 
+                  textAlign: 'center', 
+                  py: 3, 
+                  color: 'text.secondary',
+                  fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
+                }}
+              >
+                No frameworks in this category yet.
+              </Box>
+            ) : (
+              <Box
+                key={selectedCategoryId || 'all'}
+                sx={{
+                  display: 'flex',
+                  gap: 2.5, // Reduced gap
+                  alignItems: 'center',
+                  animation: `${scrollAnimation} ${isMobile ? '30s' : '40s'} linear infinite`,
+                  animationPlayState: isPaused ? 'paused' : 'running',
+                  '&:hover': { animationPlayState: 'paused' }
+                }}
+              >
+                {duplicatedFrameworks.map((fw, idx) => (
+                  <Box
+                    key={`${fw.id}-${idx}`}
+                    sx={{
+                      flexShrink: 0,
+                      minWidth: { xs: 160, md: 200 }, // Reduced width
+                      height: { xs: 100, md: 120 }, // Reduced height
+                      p: 0,
+                      m: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 2,
+                      transition: 'transform 0.25s ease',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        '& img': {
+                          animation: `${pulseAnimation} 1s ease-in-out`,
+                          boxShadow: `0 8px 24px ${fw.color}55`,
+                        }
                       }
-                    }
-                  }}
-                >
-                  {fw.imageUrl ? (
-                    <img
-                      src={fw.imageUrl}
-                      alt="framework"
-                      style={{
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        objectFit: 'contain',
-                        borderRadius: 12,
-                        display: 'block',
-                        boxShadow: 'none',
-                        transition: 'box-shadow 0.25s ease',
-                      }}
-                      loading="lazy"
-                    />
-                  ) : (
-                    // if a framework lacks an image, show a soft dot (very rare)
-                    <Box
-                      sx={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: '50%',
-                        background: `${fw.color}22`,
-                        boxShadow: `${fw.color}55 0px 4px 16px`,
-                        animation: `${glowAnimation} 2s ease-in-out infinite`
-                      }}
-                    />
-                  )}
-                </Box>
-              ))}
-            </Box>
-          )}
-        </Box>
+                    }}
+                  >
+                    {fw.imageUrl ? (
+                      <img
+                        src={fw.imageUrl}
+                        alt="framework"
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '100%',
+                          objectFit: 'contain',
+                          borderRadius: 12,
+                          display: 'block',
+                          boxShadow: 'none',
+                          transition: 'box-shadow 0.25s ease',
+                        }}
+                        loading="lazy"
+                      />
+                    ) : (
+                      // if a framework lacks an image, show a soft dot (very rare)
+                      <Box
+                        sx={{
+                          width: 48, // Reduced size
+                          height: 48,
+                          borderRadius: '50%',
+                          background: `${fw.color}22`,
+                          boxShadow: `${fw.color}55 0px 4px 16px`,
+                          animation: `${glowAnimation} 2s ease-in-out infinite`
+                        }}
+                      />
+                    )}
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
+        </Grow>
       </Container>
     </Box>
   );

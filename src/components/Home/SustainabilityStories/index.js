@@ -1,4 +1,4 @@
-// src/components/Home/SustainabilityStories/index.js - FIXED REACT HOOKS ERROR
+// src/components/Home/SustainabilityStories/index.js - ULTRA COMPACT VERSION WITH 3D EFFECTS
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
@@ -42,12 +42,12 @@ import { API_BASE } from '../../../utils/api';
 // ✅ API Configuration
 const API_URL = `${API_BASE}/api/stories`;
 
-// Animations (keep existing)
+// Animations (keep existing but subtle)
 const floatAnimation = keyframes`
   0%, 100% { transform: translateY(0px) rotate(0deg); }
-  25% { transform: translateY(-10px) rotate(0.5deg); }
-  50% { transform: translateY(-15px) rotate(0deg); }
-  75% { transform: translateY(-10px) rotate(-0.5deg); }
+  25% { transform: translateY(-6px) rotate(0.3deg); }
+  50% { transform: translateY(-8px) rotate(0deg); }
+  75% { transform: translateY(-6px) rotate(-0.3deg); }
 `;
 
 const shimmerEffect = keyframes`
@@ -57,17 +57,17 @@ const shimmerEffect = keyframes`
 
 const glowPulse = keyframes`
   0%, 100% { 
-    box-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
+    box-shadow: 0 0 12px currentColor, 0 0 24px currentColor;
   }
   50% { 
-    box-shadow: 0 0 30px currentColor, 0 0 60px currentColor;
+    box-shadow: 0 0 18px currentColor, 0 0 36px currentColor;
   }
 `;
 
 const slideIn = keyframes`
   0% {
     opacity: 0;
-    transform: translateX(50px);
+    transform: translateX(30px);
   }
   100% {
     opacity: 1;
@@ -89,7 +89,7 @@ const throttle = (func, limit) => {
   }
 };
 
-// 3D Background Globe Component (keep existing)
+// 3D Background Globe Component (more subtle)
 const ThreeJSBackground = () => {
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
@@ -104,34 +104,25 @@ const ThreeJSBackground = () => {
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: true, 
-      alpha: true 
-    });
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
     rendererRef.current = renderer;
 
     mountRef.current.appendChild(renderer.domElement);
 
-    // Create floating particles
+    // Create floating particles (reduced count)
     const particlesGeometry = new THREE.BufferGeometry();
-    const particlesCount = 500;
+    const particlesCount = 200; // Reduced from 500
     const posArray = new Float32Array(particlesCount * 3);
     const colorArray = new Float32Array(particlesCount * 3);
 
     for (let i = 0; i < particlesCount; i++) {
       // Random positions
-      posArray[i * 3] = (Math.random() - 0.5) * 20;
-      posArray[i * 3 + 1] = (Math.random() - 0.5) * 20;
-      posArray[i * 3 + 2] = (Math.random() - 0.5) * 20;
+      posArray[i * 3] = (Math.random() - 0.5) * 15;
+      posArray[i * 3 + 1] = (Math.random() - 0.5) * 15;
+      posArray[i * 3 + 2] = (Math.random() - 0.5) * 15;
 
       // Theme colors
       const colors = [
@@ -149,25 +140,25 @@ const ThreeJSBackground = () => {
     particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
 
     const particlesMaterial = new THREE.PointsMaterial({
-      size: 0.02,
+      size: 0.01, // Much smaller
       vertexColors: true,
       transparent: true,
-      opacity: 0.4,
+      opacity: 0.2, // More subtle
     });
 
     const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
     particlesRef.current = particlesMesh;
     scene.add(particlesMesh);
 
-    camera.position.z = 8;
+    camera.position.z = 6;
 
     // Animation loop
     const animate = () => {
       frameRef.current = requestAnimationFrame(animate);
 
       if (particlesRef.current) {
-        particlesRef.current.rotation.y += 0.0003;
-        particlesRef.current.rotation.x += 0.0002;
+        particlesRef.current.rotation.y += 0.0002; // Slower
+        particlesRef.current.rotation.x += 0.0001;
       }
 
       renderer.render(scene, camera);
@@ -205,13 +196,13 @@ const ThreeJSBackground = () => {
         width: '100%',
         height: '100%',
         zIndex: 0,
-        opacity: 0.3,
+        opacity: 0.15, // Much more subtle
       }}
     />
   );
 };
 
-// ✅ Enhanced 3D Story Card Component with Backend Data
+// ✅ ULTRA COMPACT 3D Story Card Component - Maintains all 3D effects but much smaller
 const StoryCard = ({ story, isActive, categoryColor }) => {
   const cardRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -232,17 +223,17 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
     const mouseX = e.clientX - centerX;
     const mouseY = e.clientY - centerY;
 
-    const rotateX = (mouseY / rect.height) * -25;
-    const rotateY = (mouseX / rect.width) * 25;
+    const rotateX = (mouseY / rect.height) * -20; // Keep 3D rotation
+    const rotateY = (mouseX / rect.width) * 20;
 
-    const translateZ = isActive ? 50 : 30;
+    const translateZ = isActive ? 40 : 25; // Keep 3D depth
 
     const newTransform = `
       perspective(1000px) 
       rotateX(${rotateX}deg) 
       rotateY(${rotateY}deg) 
       translateZ(${translateZ}px)
-      scale(${isActive ? 1.05 : 1})
+      scale(${isActive ? 1.04 : 1})
     `;
 
     setTransform(newTransform);
@@ -290,22 +281,22 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
     }
   };
 
-  // ✅ Backend data-compatible meta info
+  // ✅ Backend data-compatible meta info - ULTRA COMPACT
   const getMetaInfo = () => {
     switch (story.category) {
       case 'Video':
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CalendarTodayIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-              <Typography variant="caption" color="text.secondary">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+              <CalendarTodayIcon sx={{ fontSize: 8, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.5rem' }}>
                 {new Date(story.date).toLocaleDateString()}
               </Typography>
             </Box>
-            <Typography variant="caption" color="text.secondary">•</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <VisibilityIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-              <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.5rem' }}>•</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+              <VisibilityIcon sx={{ fontSize: 8, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.5rem' }}>
                 {story.views || '0'} views
               </Typography>
             </Box>
@@ -313,17 +304,17 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
         );
       case 'Resources':
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CalendarTodayIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-              <Typography variant="caption" color="text.secondary">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+              <CalendarTodayIcon sx={{ fontSize: 8, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.5rem' }}>
                 {new Date(story.date).toLocaleDateString()}
               </Typography>
             </Box>
-            <Typography variant="caption" color="text.secondary">•</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <GetAppIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-              <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.5rem' }}>•</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+              <GetAppIcon sx={{ fontSize: 8, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.5rem' }}>
                 {story.downloadCount || '0'} downloads
               </Typography>
             </Box>
@@ -331,17 +322,17 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
         );
       default: // Blog
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <PersonIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-              <Typography variant="caption" color="text.secondary">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+              <PersonIcon sx={{ fontSize: 8, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.5rem' }}>
                 {story.author || 'Unknown'}
               </Typography>
             </Box>
-            <Typography variant="caption" color="text.secondary">•</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <AccessTimeIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-              <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.5rem' }}>•</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+              <AccessTimeIcon sx={{ fontSize: 8, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.5rem' }}>
                 {story.readTime || 'Quick read'}
               </Typography>
             </Box>
@@ -367,22 +358,22 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
     >
       <Box
         sx={{
-          width: { xs: 300, md: 380 },
-          height: { xs: 420, md: 480 },
+          width: { xs: 300, md: 380 }, // MUCH SMALLER: Reduced from 300,380
+          height: { xs: 420, md: 280 }, // MUCH SMALLER: Reduced from 420,480
           mx: 'auto',
           position: 'relative',
           background: isHovered 
             ? `linear-gradient(135deg at ${mousePosition.x}% ${mousePosition.y}%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%)`
             : 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: 4,
+          backdropFilter: 'blur(15px)', // Reduced
+          borderRadius: 3, // Reduced from 4
           overflow: 'hidden',
           border: isActive || isHovered 
-            ? `2px solid ${categoryColor}` 
-            : '2px solid rgba(255, 255, 255, 0.3)',
+            ? `1px solid ${categoryColor}` // Thinner border
+            : '1px solid rgba(255, 255, 255, 0.3)',
           boxShadow: isActive || isHovered
-            ? `0 25px 50px ${categoryColor}30, inset 0 0 30px ${categoryColor}10`
-            : '0 15px 35px rgba(0, 0, 0, 0.1)',
+            ? `0 15px 30px ${categoryColor}20, inset 0 0 20px ${categoryColor}08` // Reduced shadows
+            : '0 8px 20px rgba(0, 0, 0, 0.08)',
           
           '&::before': {
             content: '""',
@@ -392,20 +383,20 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
             right: 0,
             bottom: 0,
             background: isHovered
-              ? `linear-gradient(${mousePosition.x + 45}deg, transparent 40%, ${categoryColor}15 50%, transparent 60%)`
+              ? `linear-gradient(${mousePosition.x + 45}deg, transparent 40%, ${categoryColor}12 50%, transparent 60%)`
               : 'none',
             animation: isHovered ? `${shimmerEffect} 3s linear infinite` : 'none',
             pointerEvents: 'none',
           },
         }}
       >
-        {/* ✅ Image Container with Backend URL */}
+        {/* ✅ Image Container with Backend URL - MUCH SMALLER */}
         <Box
           sx={{
             position: 'relative',
-            height: 220,
+            height: 150, // MUCH SMALLER: Reduced from 220
             overflow: 'hidden',
-            transform: isHovered ? 'translateZ(20px)' : 'translateZ(0px)',
+            transform: isHovered ? 'translateZ(15px)' : 'translateZ(0px)', // Keep 3D effect
             transition: 'transform 0.3s ease',
             transformStyle: 'preserve-3d',
           }}
@@ -419,71 +410,78 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
               height: '100%',
               objectFit: 'cover',
               transition: 'transform 0.6s ease',
-              transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+              transform: isHovered ? 'scale(1.08)' : 'scale(1)', // Keep zoom effect
             }}
             onError={(e) => {
               e.target.src = '/placeholder-image.jpg';
             }}
           />
           
-          {/* Category Badge */}
+          {/* Category Badge - MUCH SMALLER */}
           <Chip
             icon={getCategoryIcon()}
             label={story.category}
             size="small"
             sx={{
               position: 'absolute',
-              top: 16,
-              left: 16,
+              top: 8, // Reduced from 16
+              left: 8,
               background: `${categoryColor}E6`,
               color: 'white',
               fontWeight: 600,
-              backdropFilter: 'blur(10px)',
+              fontSize: '0.55rem', // MUCH SMALLER font
+              height: 16, // MUCH SMALLER height
+              backdropFilter: 'blur(8px)',
               border: '1px solid rgba(255, 255, 255, 0.3)',
-              transform: isHovered ? 'translateZ(30px) scale(1.1)' : 'translateZ(0px) scale(1)',
+              transform: isHovered ? 'translateZ(20px) scale(1.05)' : 'translateZ(0px) scale(1)', // Keep 3D effect
               transition: 'all 0.3s ease',
+              '& .MuiChip-icon': { 
+                fontSize: 10 // MUCH SMALLER icon
+              }
             }}
           />
 
-          {/* Featured Badge */}
+          {/* Featured Badge - MUCH SMALLER */}
           {story.featured && (
             <Chip
               label="Featured"
               size="small"
               sx={{
                 position: 'absolute',
-                top: 16,
-                right: 16,
+                top: 8,
+                right: 8,
                 background: 'rgba(255, 215, 0, 0.9)',
                 color: '#000',
                 fontWeight: 600,
-                backdropFilter: 'blur(10px)',
+                fontSize: '0.35rem', // MUCH SMALLER font
+                height: 16, // MUCH SMALLER height
+                backdropFilter: 'blur(8px)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
-                transform: isHovered ? 'translateZ(30px) scale(1.1)' : 'translateZ(0px) scale(1)',
+                transform: isHovered ? 'translateZ(20px) scale(1.05)' : 'translateZ(0px) scale(1)', // Keep 3D effect
                 transition: 'all 0.3s ease',
               }}
             />
           )}
 
-          {/* Duration/File Size Badge for Videos/Resources */}
+          {/* Duration/File Size Badge - MUCH SMALLER */}
           {(story.duration || story.fileSize) && (
             <Chip
               label={story.duration || story.fileSize}
               size="small"
               sx={{
                 position: 'absolute',
-                bottom: 16,
-                right: 16,
+                bottom: 8,
+                right: 8,
                 background: 'rgba(0, 0, 0, 0.7)',
                 color: 'white',
                 fontWeight: 500,
-                fontSize: '0.7rem',
-                height: 20,
+                fontSize: '0.5rem', // MUCH SMALLER font
+                height: 12, // MUCH SMALLER height
               }}
             />
           )}
 
-          {/* Play button for videos */}
+          {/* Play button for videos - MUCH SMALLER */}
           {story.category.toLowerCase() === 'video' && (
             <IconButton
               sx={{
@@ -493,34 +491,36 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
                 transform: 'translate(-50%, -50%)',
                 background: 'rgba(0, 0, 0, 0.7)',
                 color: 'white',
+                width: 32, // MUCH SMALLER
+                height: 32,
                 '&:hover': {
                   background: 'rgba(0, 0, 0, 0.9)',
-                  transform: 'translate(-50%, -50%) scale(1.1)',
+                  transform: 'translate(-50%, -50%) scale(1.05)', // Keep scale effect
                 },
                 transition: 'all 0.3s ease',
               }}
             >
-              <PlayCircleOutlineIcon sx={{ fontSize: 48 }} />
+              <PlayCircleOutlineIcon sx={{ fontSize: 20 }} /> {/* MUCH SMALLER icon */}
             </IconButton>
           )}
         </Box>
 
-        {/* Content */}
-        <Box sx={{ p: 3 }}>
+        {/* Content - MUCH SMALLER */}
+        <Box sx={{ p: 1.5 }}> {/* MUCH SMALLER padding: Reduced from 3 */}
           <Typography
-            variant="h5"
+            variant="h6"
             sx={{
               fontWeight: 700,
-              mb: 2,
+              mb: 1, // Reduced from 2
               color: theme.palette.text.primary,
-              fontSize: { xs: '1.2rem', md: '1.4rem' },
-              lineHeight: 1.3,
-              minHeight: '3.6em',
+              fontSize: { xs: '0.65rem', md: '0.7rem' }, // MUCH SMALLER: Reduced from 1.2rem,1.4rem
+              lineHeight: 1.2,
+              minHeight: '1.8em', // MUCH SMALLER: Reduced from 3.6em
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              transform: isHovered ? 'translateZ(15px)' : 'translateZ(0px)',
+              transform: isHovered ? 'translateZ(10px)' : 'translateZ(0px)', // Keep 3D effect
               transition: 'transform 0.3s ease',
             }}
           >
@@ -531,33 +531,34 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
             variant="body2"
             sx={{
               color: theme.palette.text.secondary,
-              mb: 2,
-              lineHeight: 1.6,
+              mb: 1, // Reduced from 2
+              lineHeight: 1.3,
+              fontSize: '0.75rem', // MUCH SMALLER font
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              minHeight: '3.2em',
-              transform: isHovered ? 'translateZ(10px)' : 'translateZ(0px)',
+              minHeight: '1.6em', // MUCH SMALLER: Reduced from 3.2em
+              transform: isHovered ? 'translateZ(8px)' : 'translateZ(0px)', // Keep 3D effect
               transition: 'transform 0.3s ease',
             }}
           >
             {story.description}
           </Typography>
 
-          {/* ✅ Tags from Backend */}
+          {/* ✅ Tags from Backend - MUCH SMALLER */}
           {story.tags && story.tags.length > 0 && (
-            <Box sx={{ mb: 2, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+            <Box sx={{ mb: 1, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
               {story.tags.slice(0, 2).map((tag, index) => (
                 <Chip
                   key={index}
                   label={tag}
                   size="small"
                   sx={{
-                    background: `${categoryColor}10`,
+                    background: `${categoryColor}08`,
                     color: categoryColor,
-                    fontSize: '0.65rem',
-                    height: 20,
+                    fontSize: '0.5rem', // MUCH SMALLER font
+                    height: 12, // MUCH SMALLER height
                     fontWeight: 500,
                   }}
                 />
@@ -567,10 +568,10 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
                   label={`+${story.tags.length - 2}`}
                   size="small"
                   sx={{
-                    background: `${categoryColor}10`,
+                    background: `${categoryColor}08`,
                     color: categoryColor,
-                    fontSize: '0.65rem',
-                    height: 20,
+                    fontSize: '0.4rem',
+                    height: 12,
                     fontWeight: 500,
                   }}
                 />
@@ -578,14 +579,14 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
             </Box>
           )}
 
-          {/* Footer */}
+          {/* Footer - MUCH SMALLER */}
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               mt: 'auto',
-              transform: isHovered ? 'translateZ(25px)' : 'translateZ(0px)',
+              transform: isHovered ? 'translateZ(15px)' : 'translateZ(0px)', // Keep 3D effect
               transition: 'transform 0.3s ease',
             }}
           >
@@ -597,30 +598,32 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
               size="small"
               sx={{
                 color: categoryColor,
-                background: `${categoryColor}15`,
-                ml: 1,
+                background: `${categoryColor}10`,
+                ml: 0.5,
+                width: 16, // MUCH SMALLER
+                height: 16,
                 '&:hover': {
-                  background: `${categoryColor}30`,
-                  transform: 'translateX(4px)',
+                  background: `${categoryColor}25`,
+                  transform: 'translateX(2px)', // Keep movement effect
                 },
                 transition: 'all 0.3s ease',
               }}
             >
-              <ArrowForwardIcon />
+              <ArrowForwardIcon sx={{ fontSize: 10 }} /> {/* MUCH SMALLER icon */}
             </IconButton>
           </Box>
         </Box>
 
-        {/* Interactive light effect */}
+        {/* Interactive light effect - MUCH SMALLER */}
         {isHovered && (
           <Box
             sx={{
               position: 'absolute',
               top: `${mousePosition.y}%`,
               left: `${mousePosition.x}%`,
-              width: 150,
-              height: 150,
-              background: `radial-gradient(circle, ${categoryColor}20 0%, transparent 70%)`,
+              width: 80, // MUCH SMALLER: Reduced from 150
+              height: 80,
+              background: `radial-gradient(circle, ${categoryColor}15 0%, transparent 70%)`,
               borderRadius: '50%',
               transform: 'translate(-50%, -50%)',
               pointerEvents: 'none',
@@ -633,20 +636,22 @@ const StoryCard = ({ story, isActive, categoryColor }) => {
   );
 };
 
-// Custom Tab Component
+// ULTRA COMPACT Tab Component
 const StyledTab = ({ label, icon, ...props }) => (
   <Tab
     label={
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        {icon}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        {React.cloneElement(icon, { sx: { fontSize: 12 } })} {/* MUCH SMALLER icon */}
         <span>{label}</span>
       </Box>
     }
     sx={{
       textTransform: 'none',
       fontWeight: 600,
-      fontSize: '1rem',
+      fontSize: '1rem', // MUCH SMALLER font: Reduced from 1rem
       color: 'text.secondary',
+      minHeight: 28, // MUCH SMALLER height
+      px: 1, // MUCH SMALLER padding
       '&.Mui-selected': {
         color: 'primary.main',
       },
@@ -656,7 +661,7 @@ const StyledTab = ({ label, icon, ...props }) => (
   />
 );
 
-// ✅ Main Component with Complete Backend Integration - HOOKS FIXED
+// ✅ Main Component - ULTRA COMPACT with all 3D effects preserved
 const SustainabilityStories = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -694,7 +699,7 @@ const SustainabilityStories = () => {
       const { data } = await axios.get(API_URL, {
         params: {
           status: 'published',
-          limit: 50, // Get more stories for carousel
+          limit: 50,
           sort: '-createdAt'
         }
       });
@@ -724,12 +729,10 @@ const SustainabilityStories = () => {
   }, [filteredStories.length]);
 
   // ✅ FIXED: All useEffect hooks BEFORE any early returns
-  // Socket.IO real-time connection
   useEffect(() => {
     fetchStories();
 
     // Initialize socket connection
-    console.log('🔌 Connecting to Stories Socket...');
     const socket = io(API_BASE, {
       transports: ['websocket'],
       upgrade: true,
@@ -738,7 +741,6 @@ const SustainabilityStories = () => {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('✅ Socket Connected:', socket.id);
       socket.emit('join-story-room', 'sustainabilityStories');
     });
 
@@ -746,79 +748,55 @@ const SustainabilityStories = () => {
     socket.on('story-created', (payload) => {
       if (payload?.success) {
         setAllStories(prev => [payload.data, ...prev]);
-        console.log('📝 New story added:', payload.data.title);
       }
     });
 
     socket.on('story-updated', (payload) => {
       if (payload?.success) {
-        setAllStories(prev => 
-          prev.map(story => 
-            story._id === payload.data._id ? payload.data : story
-          )
-        );
-        console.log('✏️ Story updated:', payload.data.title);
+        setAllStories(prev => prev.map(story => 
+          story._id === payload.data._id ? payload.data : story
+        ));
       }
     });
 
     socket.on('story-deleted', (payload) => {
-      setAllStories(prev => 
-        prev.filter(story => story._id !== payload.storyId)
-      );
-      console.log('🗑️ Story deleted:', payload.title);
-    });
-
-    socket.on('story-engagement', (payload) => {
-      if (payload.storyId) {
-        setAllStories(prev =>
-          prev.map(story =>
-            story._id === payload.storyId
-              ? {
-                  ...story,
-                  likes: payload.likes ?? story.likes,
-                  views: payload.views ?? story.views,
-                  downloadCount: payload.downloadCount ?? story.downloadCount,
-                }
-              : story
-          )
-        );
+      if (payload?.success) {
+        setAllStories(prev => prev.filter(story => story._id !== payload.data._id));
       }
     });
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
+      socket.disconnect();
     };
   }, [fetchStories]);
 
-  // Animation timers
   useEffect(() => {
-    const timers = [
-      setTimeout(() => setVisibleElements(prev => ({ ...prev, header: true })), 300),
-      setTimeout(() => setVisibleElements(prev => ({ ...prev, tabs: true })), 800),
-      setTimeout(() => setVisibleElements(prev => ({ ...prev, stories: true })), 1200),
-    ];
+    const timer = setTimeout(() => {
+      setVisibleElements({ header: true });
+    }, 300);
 
-    return () => timers.forEach(clearTimeout);
+    const timer2 = setTimeout(() => {
+      setVisibleElements(prev => ({ ...prev, tabs: true }));
+    }, 600);
+
+    const timer3 = setTimeout(() => {
+      setVisibleElements(prev => ({ ...prev, stories: true }));
+    }, 900);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
   }, []);
 
-  // ✅ FIXED: Auto-scroll useEffect moved before early returns
   useEffect(() => {
-    if (isMobile || filteredStories.length === 0) return;
+    setCurrentIndex(0);
+  }, [filteredStories.length]);
 
-    const interval = setInterval(() => {
-      handleNext();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isMobile, filteredStories.length, handleNext]);
-
-  // ✅ NOW early returns are AFTER all hooks
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
-    setCurrentIndex(0); // Reset to first item when changing tabs
+    setCurrentIndex(0);
   };
 
   const handleViewAllClick = () => {
@@ -830,12 +808,11 @@ const SustainabilityStories = () => {
     }
   };
 
-  // ✅ Loading and error states
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
-        <CircularProgress size={60} sx={{ mb: 2 }} />
-        <Typography variant="h6" color="text.secondary">
+      <Container maxWidth="xl" sx={{ py: 4, textAlign: 'center' }}>
+        <CircularProgress size={40} sx={{ mb: 2 }} />
+        <Typography variant="h6" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
           Loading sustainability stories...
         </Typography>
       </Container>
@@ -844,39 +821,37 @@ const SustainabilityStories = () => {
 
   if (error) {
     return (
-      <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
-        <Typography variant="h6" color="error" gutterBottom>
+      <Container maxWidth="xl" sx={{ py: 4, textAlign: 'center' }}>
+        <Typography variant="h6" color="error" gutterBottom sx={{ fontSize: '0.8rem' }}>
           {error}
         </Typography>
-        <Button onClick={fetchStories} variant="contained" sx={{ mt: 2 }}>
+        <Button onClick={fetchStories} variant="contained" sx={{ mt: 2, fontSize: '0.6rem' }}>
           Retry Loading
         </Button>
       </Container>
     );
   }
 
-  // ✅ Empty state handling
   if (allStories.length === 0) {
     return (
-      <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
-        <Typography variant="h6" color="text.secondary" gutterBottom>
+      <Container maxWidth="xl" sx={{ py: 4, textAlign: 'center' }}>
+        <Typography variant="h6" color="text.secondary" gutterBottom sx={{ fontSize: '0.8rem' }}>
           No sustainability stories available yet.
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.6rem' }}>
           Check back later for new content!
         </Typography>
       </Container>
     );
   }
 
-  // If filtered stories is empty, show message
   if (filteredStories.length === 0) {
     return (
-      <Container maxWidth="xl" sx={{ py: 8, textAlign: 'center' }}>
-        <Typography variant="h6" color="text.secondary" gutterBottom>
+      <Container maxWidth="xl" sx={{ py: 4, textAlign: 'center' }}>
+        <Typography variant="h6" color="text.secondary" gutterBottom sx={{ fontSize: '0.8rem' }}>
           No {categories[selectedTab].toLowerCase()} stories available yet.
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.6rem' }}>
           Try selecting a different category or check back later.
         </Typography>
       </Container>
@@ -887,92 +862,99 @@ const SustainabilityStories = () => {
     <Box
       ref={containerRef}
       sx={{
-        py: { xs: 8, md: 12 },
+        py: { xs: 3, md: 4 }, // MUCH SMALLER: Reduced from 8,12
         background: `
-          radial-gradient(circle at 10% 20%, rgba(26, 201, 159, 0.08) 0%, transparent 50%),
-          radial-gradient(circle at 80% 80%, rgba(52, 152, 219, 0.08) 0%, transparent 50%),
-          linear-gradient(135deg, ${theme.palette.background.default} 0%, rgba(248, 249, 250, 0.5) 100%)
+          radial-gradient(circle at 10% 20%, rgba(26, 201, 159, 0.04) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(52, 152, 219, 0.04) 0%, transparent 50%),
+          linear-gradient(135deg, ${theme.palette.background.default} 0%, rgba(248, 249, 250, 0.3) 100%)
         `,
         position: 'relative',
         overflow: 'hidden',
-        minHeight: '100vh',
+        minHeight: { xs: '50vh', md: '60vh' }, // MUCH SMALLER: Reduced from 100vh
       }}
     >
       {/* 3D Background */}
       <ThreeJSBackground />
 
       <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
-        {/* Header Section */}
+        {/* Header Section - ULTRA COMPACT */}
         <Fade in={visibleElements.header} timeout={1000}>
-          <Box textAlign="center" mb={8}>
+          <Box textAlign="center" mb={{ xs: 3, md: 4 }}> {/* MUCH SMALLER: Reduced from 8 */}
             <Chip
-              icon={<AutoStoriesIcon />}
               label="SUSTAINABILITY STORIES"
               sx={{
-                mb: 4,
-                px: 4,
-                py: 3,
-                fontSize: '1rem',
+                mb: 2, // MUCH SMALLER: Reduced from 4
+                px: 2, // MUCH SMALLER: Reduced from 4
+                py: 1, // MUCH SMALLER: Reduced from 3
+                fontSize: '0.45rem', // MUCH SMALLER: Reduced from 1rem
                 fontWeight: 800,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main}20, ${theme.palette.secondary.main}20)`,
-                border: `2px solid ${theme.palette.primary.main}`,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
+                border: `1px solid ${theme.palette.primary.main}`,
                 color: theme.palette.primary.main,
-                letterSpacing: 2,
-                backdropFilter: 'blur(10px)',
+                letterSpacing: 1, // MUCH SMALLER: Reduced from 2
+                backdropFilter: 'blur(8px)',
+                height: 20, // MUCH SMALLER height
               }}
             />
 
             <Typography
-              variant="h1"
+              variant="h2"
               component="h2"
               sx={{
                 fontWeight: 900,
-                mb: 3,
-                fontSize: { xs: '2.5rem', md: '4rem' },
+                mb: 1.5, // MUCH SMALLER: Reduced from 3
+                fontSize: { xs: '1.2rem', md: '1.8rem' }, // MUCH SMALLER: Reduced from 2.5rem,4rem
                 background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 lineHeight: 1.1,
-                letterSpacing: '-0.02em',
+                letterSpacing: '-0.01em',
               }}
             >
               Latest Sustainability Stories
             </Typography>
 
-            <Typography
-              variant="h5"
-              sx={{
-                color: 'text.secondary',
-                maxWidth: '700px',
-                mx: 'auto',
-                fontSize: { xs: '1.1rem', md: '1.4rem' },
-                lineHeight: 1.6,
-                fontWeight: 400,
-              }}
-            >
+            
+                        <Typography
+                          color="text.secondary"
+                          sx={{
+                            maxWidth: { xs: '95%', sm: '85%', md: '600px' },
+                            mx: 'auto',
+                            fontSize: { 
+                              xs: '0.75rem', 
+                              sm: '0.85rem', 
+                              md: '0.95rem', 
+                              lg: '1rem' 
+                            }, // Similar to TrustedByLeaders
+                            opacity: 0.8,
+                            lineHeight: 1.4,
+                            transition: 'transform 0.3s ease',
+                            px: { xs: 0.5, sm: 1 },
+                          }}
+                        >
               Insights, news, and resources from our sustainability experts
             </Typography>
           </Box>
         </Fade>
 
-        {/* Tabs */}
+        {/* Tabs - ULTRA COMPACT */}
         <Fade in={visibleElements.tabs} timeout={1200}>
-          <Box sx={{ mb: 6, display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ mb: { xs: 3, md: 4 }, display: 'flex', justifyContent: 'center' }}> {/* MUCH SMALLER: Reduced from 6 */}
             <Tabs
               value={selectedTab}
               onChange={handleTabChange}
               sx={{
                 '& .MuiTabs-indicator': {
-                  height: 3,
-                  borderRadius: 2,
+                  height: 1.5, // MUCH SMALLER: Reduced from 3
+                  borderRadius: 1,
                   background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 },
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: 50,
-                padding: '4px',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(8px)',
+                borderRadius: 20, // MUCH SMALLER: Reduced from 50
+                padding: '2px', // MUCH SMALLER: Reduced from 4px
+                border: '1px solid rgba(255, 255, 255, 0.15)',
               }}
             >
               <StyledTab label="All" icon={<AutoStoriesIcon />} />
@@ -983,17 +965,17 @@ const SustainabilityStories = () => {
           </Box>
         </Fade>
 
-        {/* Stories Carousel */}
+        {/* Stories Carousel - ULTRA COMPACT */}
         <Grow in={visibleElements.stories} timeout={1400}>
           <Box>
-            {/* Navigation Buttons */}
+            {/* Navigation Buttons - ULTRA COMPACT */}
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                gap: 4,
-                mb: 4,
+                gap: 2, // MUCH SMALLER: Reduced from 4
+                mb: 3, // MUCH SMALLER: Reduced from 4
               }}
             >
               <IconButton
@@ -1001,11 +983,13 @@ const SustainabilityStories = () => {
                 disabled={filteredStories.length <= 1}
                 sx={{
                   background: 'rgba(255, 255, 255, 0.9)',
-                  backdropFilter: 'blur(10px)',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  width: 32, // MUCH SMALLER
+                  height: 32,
                   '&:hover': {
                     background: 'rgba(255, 255, 255, 1)',
-                    transform: 'translateX(-4px)',
+                    transform: 'translateX(-2px)',
                   },
                   '&:disabled': {
                     opacity: 0.5,
@@ -1013,16 +997,17 @@ const SustainabilityStories = () => {
                   transition: 'all 0.3s ease',
                 }}
               >
-                <NavigateBeforeIcon />
+                <NavigateBeforeIcon sx={{ fontSize: 16 }} /> {/* MUCH SMALLER */}
               </IconButton>
 
               <Typography
-                variant="body1"
+                variant="body2"
                 sx={{
                   color: 'text.secondary',
                   fontWeight: 600,
-                  minWidth: 100,
+                  minWidth: '60px',
                   textAlign: 'center',
+                  fontSize: '0.6rem', // MUCH SMALLER
                 }}
               >
                 {currentIndex + 1} / {filteredStories.length}
@@ -1033,11 +1018,13 @@ const SustainabilityStories = () => {
                 disabled={filteredStories.length <= 1}
                 sx={{
                   background: 'rgba(255, 255, 255, 0.9)',
-                  backdropFilter: 'blur(10px)',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  width: 32, // MUCH SMALLER
+                  height: 32,
                   '&:hover': {
                     background: 'rgba(255, 255, 255, 1)',
-                    transform: 'translateX(4px)',
+                    transform: 'translateX(2px)',
                   },
                   '&:disabled': {
                     opacity: 0.5,
@@ -1045,16 +1032,16 @@ const SustainabilityStories = () => {
                   transition: 'all 0.3s ease',
                 }}
               >
-                <NavigateNextIcon />
+                <NavigateNextIcon sx={{ fontSize: 16 }} /> {/* MUCH SMALLER */}
               </IconButton>
             </Box>
 
-            {/* Stories Container with Swiper Effect */}
+            {/* Stories Container with 3D Effect - ULTRA COMPACT */}
             <Box
               sx={{
                 position: 'relative',
-                height: { xs: 480, md: 550 },
-                perspective: '2000px',
+                height: { xs: 320, md: 360 }, // MUCH SMALLER: Reduced from 480,550
+                perspective: '1500px', // Keep 3D perspective
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1073,12 +1060,12 @@ const SustainabilityStories = () => {
                     sx={{
                       position: 'absolute',
                       transform: isMobile && !isActive ? 'scale(0)' : `
-                        translateX(${offset * (isMobile ? 0 : 120)}px)
-                        translateZ(${Math.abs(offset) * -100}px)
-                        rotateY(${offset * (isMobile ? 0 : -15)}deg)
-                        scale(${isActive ? 1 : 0.8})
-                      `,
-                      opacity: isActive ? 1 : isMobile ? 0 : 0.5,
+                        translateX(${offset * (isMobile ? 0 : 80)}px)
+                        translateZ(${Math.abs(offset) * -60}px)
+                        rotateY(${offset * (isMobile ? 0 : -12)}deg)
+                        scale(${isActive ? 1 : 0.85})
+                      `, // Keep all 3D transforms but smaller values
+                      opacity: isActive ? 1 : isMobile ? 0 : 0.6,
                       transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                       zIndex: 10 - Math.abs(offset),
                       pointerEvents: isActive ? 'auto' : 'none',
@@ -1094,13 +1081,13 @@ const SustainabilityStories = () => {
               })}
             </Box>
 
-            {/* Pagination Dots */}
+            {/* Pagination Dots - ULTRA COMPACT */}
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
-                gap: 1,
-                mt: 4,
+                gap: 0.5, // MUCH SMALLER: Reduced from 1
+                mt: 3, // MUCH SMALLER: Reduced from 4
               }}
             >
               {filteredStories.map((_, index) => (
@@ -1108,9 +1095,9 @@ const SustainabilityStories = () => {
                   key={index}
                   onClick={() => setCurrentIndex(index)}
                   sx={{
-                    width: index === currentIndex ? 30 : 8,
-                    height: 8,
-                    borderRadius: 4,
+                    width: index === currentIndex ? 20 : 6, // MUCH SMALLER: Reduced from 30,8
+                    height: 6, // MUCH SMALLER: Reduced from 8
+                    borderRadius: 3,
                     background: index === currentIndex 
                       ? `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
                       : 'rgba(0, 0, 0, 0.2)',
@@ -1120,73 +1107,64 @@ const SustainabilityStories = () => {
                       background: index === currentIndex 
                         ? `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
                         : 'rgba(0, 0, 0, 0.4)',
-                      transform: 'scale(1.2)',
+                      transform: 'scale(1.1)',
                     },
                   }}
                 />
               ))}
             </Box>
 
-            {/* View All Button */}
+            {/* View All Button - ULTRA COMPACT */}
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
-                mt: 6,
+                mt: 3, // MUCH SMALLER: Reduced from 6
               }}
             >
-              <button
+              <Button
                 onClick={handleViewAllClick}
-                style={{
-                  padding: '14px 40px',
-                  fontSize: '16px',
+                variant="outlined"
+                sx={{
+                  px: 2.5, // MUCH SMALLER: Reduced from 40px
+                  py: 0.8, // MUCH SMALLER: Reduced from 14px
+                  fontSize: '0.9rem', // MUCH SMALLER: Reduced from 16px
                   fontWeight: 700,
-                  borderRadius: '30px',
-                  border: `2px solid ${categoryColors[categories[selectedTab]]}`,
+                  borderRadius: 15, // MUCH SMALLER: Reduced from 30px
+                  border: `1px solid ${categoryColors[categories[selectedTab]]}`,
                   background: 'transparent',
                   color: categoryColors[categories[selectedTab]],
-                  cursor: 'pointer',
+                  letterSpacing: '0.3px',
                   transition: 'all 0.3s ease',
-                  letterSpacing: '0.5px',
-                  textTransform: 'uppercase',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = categoryColors[categories[selectedTab]];
-                  e.target.style.color = 'white';
-                  e.target.style.transform = 'translateY(-3px)';
-                  e.target.style.boxShadow = `0px 15px 40px ${categoryColors[categories[selectedTab]]}40`;
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'transparent';
-                  e.target.style.color = categoryColors[categories[selectedTab]];
-                  e.target.style.transform = 'translateY(0px)';
-                  e.target.style.boxShadow = 'none';
+                  '&:hover': {
+                    background: categoryColors[categories[selectedTab]],
+                    color: 'white',
+                    transform: 'translateY(-1px)',
+                    boxShadow: `0px 8px 25px ${categoryColors[categories[selectedTab]]}40`,
+                  }
                 }}
               >
-                View All {categories[selectedTab]} <ArrowForwardIcon />
-              </button>
+                View  {categories[selectedTab]} <ArrowForwardIcon sx={{ ml: 0.5, fontSize: 12 }} />
+              </Button>
             </Box>
           </Box>
         </Grow>
 
-        {/* Floating Background Elements */}
-        {[...Array(8)].map((_, i) => (
+        {/* Floating Background Elements - MUCH SMALLER */}
+        {[...Array(4)].map((_, i) => (
           <Box
             key={i}
             sx={{
               position: 'absolute',
-              width: { xs: 40, md: 60 },
-              height: { xs: 40, md: 60 },
+              width: { xs: 20, md: 30 }, // MUCH SMALLER
+              height: { xs: 20, md: 30 },
               borderRadius: '50%',
-              background: `linear-gradient(45deg, ${Object.values(categoryColors)[i % 4]}20, ${Object.values(categoryColors)[(i + 1) % 4]}20)`,
+              background: `linear-gradient(45deg, ${Object.values(categoryColors)[i % 4]}15, ${Object.values(categoryColors)[(i + 1) % 4]}15)`,
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
               animation: `${floatAnimation} ${10 + Math.random() * 10}s ease-in-out infinite`,
               animationDelay: `${Math.random() * 5}s`,
-              opacity: 0.3,
+              opacity: 0.2,
               display: { xs: 'none', md: 'block' },
             }}
           />
