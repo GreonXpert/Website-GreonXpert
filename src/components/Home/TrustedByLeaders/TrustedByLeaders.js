@@ -497,6 +497,7 @@ const TrustedByLeaders = () => {
           px: { xs: 1.5, sm: 2, md: 3 },
         }}
       >
+        
         {/* Main Title */}
         <Fade in timeout={800}>
           <Box textAlign="center" mb={{ xs: 2, sm: 3, md: 4 }}>
@@ -544,7 +545,8 @@ const TrustedByLeaders = () => {
                 mb: 3,
               }}
             >
-              Powerful SaaS solutions to acccelerate your climate & compliance journery
+              Powerful SaaS solutions accelerating your climate and compliance journey.
+Turn complex data into measurable action with our integrated platforms for real-time emissions management and automated ESG reporting.
             </Typography>
 
             {/* ✅ UPDATED: Product Images Section with backend data */}

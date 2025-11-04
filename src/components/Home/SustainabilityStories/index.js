@@ -912,7 +912,8 @@ const SustainabilityStories = () => {
                 letterSpacing: '-0.01em',
               }}
             >
-              Latest Sustainability Stories
+              Latest Insights from Our Climate Experts
+
             </Typography>
 
             
@@ -933,7 +934,8 @@ const SustainabilityStories = () => {
                             px: { xs: 0.5, sm: 1 },
                           }}
                         >
-              Insights, news, and resources from our sustainability experts
+              Timely updates, thought leadership, and practical resources -
+curated by the Greon Xpert team to help you stay ahead in the sustainability landscape
             </Typography>
           </Box>
         </Fade>

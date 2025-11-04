@@ -15,10 +15,10 @@ const Company = () => {
   return (
     <Box>
         <AboutUs />
-      <CompanyHero />
+      {/* <CompanyHero /> */}
             
 
-      <Journey />
+      {/* <Journey /> */}
       <Teams />
       {/* Placeholder for additional company content sections */}
      

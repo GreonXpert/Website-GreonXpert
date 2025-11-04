@@ -263,7 +263,7 @@ const PoweredByScience = () => {
                 color: theme.palette.secondary.light,
               }}
             >
-              Grounded In Research
+              Aligned With Leading Global Frameworks
               <br />
               {/* <span style={{
                 background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
@@ -293,7 +293,7 @@ const PoweredByScience = () => {
                 px: { xs: 0.5, sm: 1 },
               }}
             >
-              Our platform is built in alignment with globally recognized standards and scientific frameworks, enabling audit-ready compliance.
+              Our platform is built in alignment with globally recognized standards and scientific frameworks - enabling audit-ready, verifiable compliance across every sustainability domain.
             </Typography>
           </Box>
         </Fade>

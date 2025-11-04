@@ -973,7 +973,9 @@ const ClimateIntelligence = () => {
                             px: { xs: 0.5, sm: 1 },
                           }}
                         >
-              Your comprehensive platform for emission monitoring, strategic decarbonization, and transparent reporting.
+                          Your all-in-one platform for emission monitoring, strategic decarbonization, and transparent ESG reporting.
+Built for organizations that want real progress - not just reports.
+
             </Typography>
           </Box>
         </Fade>

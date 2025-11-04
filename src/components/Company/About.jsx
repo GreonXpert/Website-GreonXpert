@@ -4,7 +4,7 @@ import { keyframes } from '@emotion/react';
 import { motion, useMotionValue, useTransform, useInView, animate } from 'framer-motion';
 import { ArrowForward } from '@mui/icons-material';
 import background1 from '../../assests/About/background-4.jpg';
-import background2 from '../../assests/About/background-2.jpg';
+import background2 from '../../assests/About/background-2.png';
 import background3 from '../../assests/About/background-3.jpg';
 
 // Keyframes for background color transition
@@ -40,11 +40,11 @@ const About = ({ mediaSrc, mediaType = 'image', href, caption, projectName = "Ou
   const textContent = [
     {
       title: "Our Vision",
-      content: "To revolutionize the digital landscape by creating innovative solutions that empower businesses and transform user experiences across the globe."
+      content: "Making sustainability simple, actionable and powered by innovation."
     },
     {
       title: "Our Mission", 
-      content: "We are dedicated to delivering cutting-edge technology solutions that drive growth, efficiency, and meaningful connections between brands and their audiences."
+      content: "Designing the future of sustainability-where action is as innovative as our ideas."
     },
     {
       title: "About Us",

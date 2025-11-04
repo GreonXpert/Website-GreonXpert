@@ -640,7 +640,9 @@ const AdvisoryBoard = () => {
               className="animated-word-reveal"
             >
               <AnimatedWordReveal 
-                text="Guided by top carbon and ESG specialists, GreonXpert delivers high-impact tools for emissions tracking, sustainability reporting, and strategic decarbonisation, giving you the ultimate advantage in a green economy."
+                text="Led by global experts in carbon strategy, ESG, and sustainable development,
+the Greon Xpert Advisory Board ensures every platform feature and consulting solution
+is built on proven science, measurable impact, and forward-looking climate insight."
                 delay={3500}
                 scrollScale={scrollScale}
               />

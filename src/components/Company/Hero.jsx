@@ -157,8 +157,7 @@ const Hero = () => {
               px: { xs: 0.5, sm: 1 }, // Responsive padding like TrustedByLeaders
             }}
           >
-            At GreonXpert, we are committed to empowering businesses with cutting-edge software solutions
-            that drive environmental responsibility and operational excellence.
+            Designing the future of sustainability-where action is as innovative as our ideas.
           </Typography>
           <Button
             variant="contained"

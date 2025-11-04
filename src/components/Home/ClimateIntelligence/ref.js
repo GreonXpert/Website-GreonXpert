@@ -956,7 +956,7 @@ const ClimateIntelligence = () => {
       id: 'automate',
       icon: <DashboardIcon />,
       title: 'Automate',
-      description: 'Bring all emission sources together for real-time centralized control and comprehensive monitoring.',
+      description: 'Bring every emission source together with real-time, centralized control.',
       colorHex: '#1AC99F',
       shape: 'Automate',
       benefits: [
@@ -974,7 +974,7 @@ const ClimateIntelligence = () => {
       id: 'decarbonize',
       icon: <SettingsIcon />,
       title: 'Decarbonize',
-      description: 'Enable targeted climate action through precise carbon measurement and strategic planning.',
+      description: 'Turn data into targeted climate action. Use AI-driven reduction pathways and scenario modeling to plan, compare, and optimize your journey to Net Zero.',
       colorHex: '#2E8B8B',
       shape: 'Decarbonize',
       benefits: [
@@ -992,7 +992,7 @@ const ClimateIntelligence = () => {
       id: 'disclose',
       icon: <TrendingUpIcon />,
       title: 'Disclose',
-      description: 'Share your sustainability data with clarity, confidence, and transparency to stakeholders.',
+      description: 'Share your sustainability progress with clarity and confidence. Generate audit-ready carbon and ESG reports aligned with GHG Protocol, ISO, and BRSR frameworks.',
       colorHex: '#3498db',
       shape: 'Disclose',
       benefits: [
@@ -1113,7 +1113,9 @@ const ClimateIntelligence = () => {
                 px: { xs: 1, sm: 0 },
               }}
             >
-              Your comprehensive platform for emission monitoring, strategic decarbonization, and transparent reporting.
+              Your all-in-one platform for emission monitoring, strategic decarbonization, and transparent ESG reporting.
+Built for organizations that want real progress - not just reports.
+
             </Typography>
           </Box>
         </Fade>

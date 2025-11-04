@@ -186,7 +186,7 @@ const Hero = () => {
           </Typography>
 
           {/* Stats */}
-          <Box
+          {/* <Box
             sx={{
               display: 'flex',
               justifyContent: 'center',
@@ -231,7 +231,7 @@ const Hero = () => {
                 </Typography>
               </Box>
             ))}
-          </Box>
+          </Box> */}
         </Box>
       </Container>
     </Box>
