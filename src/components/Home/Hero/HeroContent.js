@@ -91,7 +91,7 @@ const HeroContent = () => {
           margin: isMobile ? '0 0 16px 0' : isTablet ? '0 0 20px 0' : '0 0 24px 0',
         }}
       >
-        Live carbon footprint monitoring across all scopes -  visualize real impact with real-time data.
+       One platform, Real progress - Track, improve, and lead your sustainability journey with one powerful, intelligent solution.
       </h2>
 
       {/* Action Buttons */}
@@ -199,7 +199,7 @@ const HeroContent = () => {
           </div>
         </div>
 
-      <div style={{ textAlign: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
           <div
             style={{
               color: '#1AC99F',
@@ -207,7 +207,7 @@ const HeroContent = () => {
               fontSize: isMobile ? '18px' : isTablet ? '19px' : '20px',
             }}
           >
-            5 
+            24/7
           </div>
            <div
             style={{
@@ -215,7 +215,7 @@ const HeroContent = () => {
               fontSize: isMobile ? '11px' : '12px',
             }}
           >
-            Years of progress
+            Real-time Monitoring
           </div>
         </div>
         

@@ -359,7 +359,7 @@ const EmissionsChart = () => {
             color: '#555',
             fontSize: fontSize.statsLabel
           }}>
-            Years
+            Years of progress
           </div>
         </div>
       </div>

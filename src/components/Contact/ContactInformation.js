@@ -181,21 +181,21 @@ const ContactInformation = ({ visibleElements, displayMode = 'all' }) => {
     {
       icon: <LocationOnIcon />,
       title: 'Visit Us',
-      info: 'GreonXpert Pvt Ltd.\nKalamassery, Ernakulam\nKerala, India',
+      info: 'Greon Xpert Pvt Ltd, Door No. 230/A6, Pallath Heights, Fact Road, Kalamassery, Kanayannur, Ernakulam 683104',
       color: '#1AC99F',
       delay: 0
     },
     {
       icon: <PhoneIcon />,
       title: 'Call Us',
-      info: '+91 77365 38040\nMon - Fri: 9:00 AM - 6:00 PM\nSat: 9:00 AM - 2:00 PM',
+      info: '+91 98460 70403\nMon - Fri: 9:00 AM - 6:00 PM\nSat: 9:00 AM - 2:00 PM',
       color: '#2E8B8B',
       delay: 200
     },
     {
       icon: <EmailIcon />,
       title: 'Email Us',
-      info: 'info@greonXpert.com\nsupport@greonXpert.com\ncareers@greonXpert.com',
+      info: 'info@greonXpert.com',
       color: '#3498db',
       delay: 400
     }
