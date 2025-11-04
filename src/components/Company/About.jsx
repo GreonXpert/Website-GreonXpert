@@ -48,7 +48,7 @@ const About = ({ mediaSrc, mediaType = 'image', href, caption, projectName = "Ou
     },
     {
       title: "About Us",
-      content: "A passionate team of innovators, designers, and developers committed to pushing the boundaries of what's possible in digital transformation."
+      content: "We build practical climate software and services that turn emissions data into decisions. Our team blends engineering, auditing, and design to deliver audit-ready results fast. Based in Kerala with a global outlook, we help companies measure, report, and cut carbon."
     }
   ];
 
@@ -380,24 +380,7 @@ const About = ({ mediaSrc, mediaType = 'image', href, caption, projectName = "Ou
         ))}
       </Box>
 
-      {/* Debug indicator showing text position */}
-      <Box sx={{
-        position: 'absolute',
-        top: 20,
-        left: 20,
-        color: 'white',
-        background: 'rgba(0,0,0,0.7)',
-        padding: '8px 12px',
-        borderRadius: '8px',
-        fontSize: '14px',
-        zIndex: 3,
-        fontFamily: 'monospace',
-      }}>
-        <Typography variant="caption" sx={{ color: 'white' }}>
-          Background: {currentBgIndex + 1}/{backgroundImages.length} | 
-          Text: {isTextOnLeft ? 'LEFT' : 'RIGHT'} Side
-        </Typography>
-      </Box>
+     
     </Box>
   );
 };

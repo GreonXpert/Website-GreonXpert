@@ -43,7 +43,7 @@ const Footer = () => {
               GreonXpert
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              A short description about your company and what you do. This helps visitors understand your mission.
+              We build AI + IoT climate software and consulting to help companies measure, report, and reduce carbon—fast.
             </Typography>
             <Box sx={{ mt: 2 }}>
               <IconButton color="primary" aria-label="facebook" component="a" href="https://facebook.com" target="_blank" rel="noopener noreferrer">
@@ -116,13 +116,13 @@ const Footer = () => {
               Contact
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              greonXpert Pvt Ltd. Kalamassery, Ernakulam, Kerala, India
+              Greon Xpert Pvt Ltd, Door No. 230/A6, Pallath Heights, Fact Road, Kalamassery, Kanayannur, Ernakulam 683104
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
               Email: info@greonXpert.com
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Phone: +91 77365 38040
+              Phone: +91 98460 70403
             </Typography>
           </Grid>
         </Grid>
