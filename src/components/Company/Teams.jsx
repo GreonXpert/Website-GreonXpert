@@ -917,7 +917,7 @@ const Teams = () => {
                     transition: 'transform 0.3s ease',
                   }}
                 >
-                  All-in-one platform to plan, collaborate, and deliver — faster and smarter with our expert team of sustainability professionals.
+                  Sustainability strategists, Consultants, and engineers working as one-to plan, collaborate, and ship measurable results faster.
                 </Typography>
               </motion.div>
             </Box>
