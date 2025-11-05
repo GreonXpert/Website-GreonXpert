@@ -52,7 +52,7 @@ import FeaturedStoryCard from '../components/SustainabilityStory/FeaturedStoryCa
 import BlogDialogContent from '../components/SustainabilityStory/BlogDialogContent';
 import VideoDialogContent from '../components/SustainabilityStory/VideoDialogContent';
 import ResourceDocument from '../components/SustainabilityStory/ResourceDocument';
-import { API_BASE } from '../../utils/api';
+import { API_BASE } from '../utils/api';
 
 // ✅ API Configuration
 const API_URL = `${API_BASE}/api/stories`;
