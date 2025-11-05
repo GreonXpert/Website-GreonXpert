@@ -119,7 +119,7 @@ const Footer = () => {
               Greon Xpert Pvt Ltd, Door No. 230/A6, Pallath Heights, Fact Road, Kalamassery, Kanayannur, Ernakulam 683104
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              Email: info@greonXpert.com
+              Email: info@greonxpert.com
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
               Phone: +91 98460 70403
