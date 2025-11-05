@@ -195,7 +195,7 @@ const ContactInformation = ({ visibleElements, displayMode = 'all' }) => {
     {
       icon: <EmailIcon />,
       title: 'Email Us',
-      info: 'info@greonXpert.com',
+      info: 'info@greonxpert.com',
       color: '#3498db',
       delay: 400
     }
