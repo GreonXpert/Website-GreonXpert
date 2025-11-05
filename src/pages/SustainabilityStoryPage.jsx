@@ -52,9 +52,9 @@ import FeaturedStoryCard from '../components/SustainabilityStory/FeaturedStoryCa
 import BlogDialogContent from '../components/SustainabilityStory/BlogDialogContent';
 import VideoDialogContent from '../components/SustainabilityStory/VideoDialogContent';
 import ResourceDocument from '../components/SustainabilityStory/ResourceDocument';
+import { API_BASE } from '../../utils/api';
 
 // ✅ API Configuration
-const API_BASE = 'http://localhost:5000';
 const API_URL = `${API_BASE}/api/stories`;
 
 // === Animations ===
