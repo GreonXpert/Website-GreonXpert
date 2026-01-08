@@ -1,4 +1,4 @@
-// src/components/Teams/Teams.jsx - UPDATED WITH CONSISTENT STYLING
+// src/components/Teams/Teams.jsx - FIXED CAROUSEL ALIGNMENT AND 3D POSITIONING
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
@@ -56,20 +56,6 @@ const floatAnimation = keyframes`
     transform: translateY(-8px) rotate(-0.3deg);
   }
 `;
-
-/* Desktop 3D Layout Helpers */
-const transformByOffset = {
-  0: 'rotateY(0deg) translateZ(0px) translateX(0%)',
-  5: 'rotateY(18deg) translateZ(-110px) translateX(-120%)',
-  4: 'rotateY(28deg) translateZ(-200px) translateX(-240%)',
-  1: 'rotateY(-18deg) translateZ(-110px) translateX(120%)',
-  2: 'rotateY(-28deg) translateZ(-200px) translateX(240%)',
-  3: 'rotateY(-40deg) translateZ(-280px) translateX(360%)',
-};
-
-const zByOffset = { 0: 100, 5: 60, 1: 55, 4: 40, 2: 35, 3: 20 };
-const sizeByOffset = (offset) => (offset === 0 ? { w: 200, h: 260 } : { w: 180, h: 240 });
-const getOffset = (index, activeIndex, len) => ((index - activeIndex) % len + len) % len;
 
 /* ===================== Floating Particle Component ===================== */
 const FloatingParticle = ({ delay = 0, size = 3, color = '#1AC99F', top, left }) => (
@@ -297,37 +283,100 @@ const TeamDetailDialog = ({ open, onClose, member }) => {
   );
 };
 
-/* ===================== Team Image (Desktop Card) ===================== */
-const TeamImage = ({ image, offset, hovered, onHover, onLeave, onMoreClick }) => {
+/* ===================== Team Image (Desktop Card) - COMPLETELY REWRITTEN ===================== */
+const TeamImage = ({ image, offset, activeIndex, hovered, onHover, onLeave, onMoreClick }) => {
   const isActive = hovered === offset;
   const isDimmed = hovered !== null && hovered !== offset;
-  const { w, h } = sizeByOffset(offset);
-  const isCenterItem = offset === 0;
+  const isCenter = offset === 0;
+
+  // Calculate position based on offset
+  let transform = '';
+  let zIndex = 1;
+  let scale = 1;
+  let opacity = 1;
+  
+  if (offset === 0) {
+    // Center position
+    transform = 'translateX(0%) translateZ(0px) rotateY(0deg)';
+    zIndex = 100;
+    scale = 1.1;
+  } else if (offset === 1) {
+    // First right
+    transform = 'translateX(110%) translateZ(-100px) rotateY(-15deg)';
+    zIndex = 80;
+    scale = 0.95;
+  } else if (offset === 2) {
+    // Second right
+    transform = 'translateX(220%) translateZ(-180px) rotateY(-25deg)';
+    zIndex = 60;
+    scale = 0.85;
+    opacity = 0.7;
+  } else if (offset >= 3 && offset <= 4) {
+    // Far right - hidden
+    transform = 'translateX(330%) translateZ(-250px) rotateY(-35deg)';
+    zIndex = 40;
+    scale = 0.75;
+    opacity = 0;
+  } else if (offset === 5) {
+    // First left (wraps from end)
+    transform = 'translateX(-110%) translateZ(-100px) rotateY(15deg)';
+    zIndex = 80;
+    scale = 0.95;
+  } else if (offset === 6) {
+    // Second left
+    transform = 'translateX(-220%) translateZ(-180px) rotateY(25deg)';
+    zIndex = 60;
+    scale = 0.85;
+    opacity = 0.7;
+  } else {
+    // Far left - hidden
+    transform = 'translateX(-330%) translateZ(-250px) rotateY(35deg)';
+    zIndex = 40;
+    scale = 0.75;
+    opacity = 0;
+  }
+
+  if (isActive) {
+    scale *= 1.08;
+    zIndex = 150;
+  }
+
+  const width = isCenter ? 220 : 200;
+  const height = isCenter ? 280 : 260;
 
   return (
     <Box
+      onClick={() => offset === 0 && onMoreClick(image)}
       onMouseEnter={() => onHover(offset)}
       onMouseLeave={onLeave}
       sx={{
         position: 'absolute',
-        transition: 'transform 0.35s ease, box-shadow 0.35s ease, filter 0.35s ease, opacity 0.25s ease',
-        borderRadius: '12px',
+        left: '50%',
+        top: '50%',
+        marginLeft: `-${width / 2}px`,
+        marginTop: `-${height / 2}px`,
+        width: `${width}px`,
+        height: `${height}px`,
+        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+        borderRadius: '16px',
         overflow: 'hidden',
-        transform: `${transformByOffset[offset]}${isActive ? ' scale(1.08)' : ''}`,
-        zIndex: isActive ? 150 : zByOffset[offset],
+        transform: `${transform} scale(${scale})`,
+        transformStyle: 'preserve-3d',
+        zIndex: isActive ? 150 : zIndex,
         boxShadow: isActive
-          ? '0 18px 45px rgba(0,0,0,0.28)'
-          : isCenterItem
-          ? '0 12px 28px rgba(0,0,0,0.18)'
-          : '0 10px 20px rgba(0,0,0,0.1)',
+          ? '0 20px 60px rgba(0,0,0,0.3)'
+          : isCenter
+          ? '0 15px 40px rgba(0,0,0,0.2)'
+          : '0 10px 30px rgba(0,0,0,0.15)',
         outline: isActive
-          ? '2px solid rgba(26,201,159,0.9)'
-          : isCenterItem
-          ? '2px solid rgba(26,201,159,0.3)'
-          : '2px solid transparent',
-        opacity: isDimmed ? 0.7 : 1,
-        filter: isDimmed ? 'grayscale(10%) brightness(0.95)' : 'none',
-        cursor: 'pointer',
+          ? '3px solid rgba(26,201,159,0.9)'
+          : isCenter
+          ? '2px solid rgba(26,201,159,0.4)'
+          : 'none',
+        opacity: isDimmed ? 0.6 : opacity,
+        filter: isDimmed ? 'grayscale(20%) brightness(0.9)' : 'none',
+        cursor: offset === 0 ? 'pointer' : 'default',
+        pointerEvents: opacity === 0 ? 'none' : 'auto',
       }}
     >
       <Box
@@ -335,94 +384,100 @@ const TeamImage = ({ image, offset, hovered, onHover, onLeave, onMoreClick }) =>
         src={image.imageUrl?.startsWith('http') ? image.imageUrl : `${API_BASE}${image.imageUrl}`}
         alt={image.name}
         sx={{
-          width: { xs: 140, md: w },
-          height: { xs: 180, md: h },
+          width: '100%',
+          height: '100%',
           objectFit: 'cover',
           display: 'block',
           userSelect: 'none',
-          pointerEvents: 'none',
         }}
       />
 
-      {/* More Button */}
-      <Button
-        onClick={() => onMoreClick(image)}
-        sx={{
-          position: 'absolute',
-          top: 12,
-          right: 12,
-          minWidth: 60,
-          height: 28,
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '20px',
-          color: 'white',
-          fontSize: '0.7rem',
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-          transition: 'all 0.3s ease',
-          opacity: isActive || isCenterItem ? 1 : 0,
-          '&:hover': {
-            backgroundColor: 'rgba(26, 201, 159, 0.2)',
-            borderColor: 'rgba(26, 201, 159, 0.5)',
-            animation: `${glowAnimation} 2s infinite`,
-            transform: 'scale(1.05)',
-          }
-        }}
-      >
-        More
-      </Button>
+      {/* More Button - Only on center card */}
+      {(isCenter || isActive) && (
+        <Button
+          onClick={(e) => {
+            e.stopPropagation();
+            onMoreClick(image);
+          }}
+          sx={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            minWidth: 60,
+            height: 28,
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '20px',
+            color: 'white',
+            fontSize: '0.7rem',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              backgroundColor: 'rgba(26, 201, 159, 0.3)',
+              borderColor: 'rgba(26, 201, 159, 0.6)',
+              animation: `${glowAnimation} 2s infinite`,
+              transform: 'scale(1.05)',
+            }
+          }}
+        >
+          More
+        </Button>
+      )}
 
-      {/* Hover Overlay */}
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'flex-end',
-          p: 2,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0.35), rgba(0,0,0,0))',
-          opacity: isActive ? 1 : 0,
-          transition: 'opacity 0.3s ease',
-          pointerEvents: 'none',
-          textAlign: 'center',
-        }}
-      >
-        <Stack spacing={0.5} sx={{ width: '100%' }}>
-          <Typography
-            variant="caption"
-            sx={{
-              color: '#A7F3D0',
-              letterSpacing: 0.8,
-              fontWeight: 800,
-              textTransform: 'uppercase',
-            }}
-          >
-            {image.role}
-          </Typography>
-          <Typography
-            variant="subtitle1"
-            sx={{ color: '#FFFFFF', fontWeight: 800, lineHeight: 1.1 }}
-          >
-            {image.name}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: '#E5E7EB',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              lineHeight: 1.3
-            }}
-          >
-            {image.bio}
-          </Typography>
-        </Stack>
-      </Box>
+      {/* Info Overlay - Only on center or hovered card */}
+      {(isCenter || isActive) && (
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'flex-end',
+            p: 2.5,
+            background: 'linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.4), rgba(0,0,0,0))',
+            opacity: isActive || isCenter ? 1 : 0,
+            transition: 'opacity 0.3s ease',
+            pointerEvents: 'none',
+          }}
+        >
+          <Stack spacing={0.5} sx={{ width: '100%', textAlign: 'center' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: '#A7F3D0',
+                letterSpacing: 1,
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                fontSize: '0.65rem',
+              }}
+            >
+              {image.role}
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{ color: '#FFFFFF', fontWeight: 800, lineHeight: 1.2, fontSize: '1rem' }}
+            >
+              {image.name}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: '#E5E7EB',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                lineHeight: 1.4,
+                fontSize: '0.7rem',
+              }}
+            >
+              {image.bio}
+            </Typography>
+          </Stack>
+        </Box>
+      )}
     </Box>
   );
 };
@@ -541,10 +596,10 @@ const NavigationArrow = ({ direction, onClick }) => (
       position: 'absolute',
       top: '50%',
       transform: 'translateY(-50%)',
-      [direction === 'left' ? 'left' : 'right']: -60,
+      [direction === 'left' ? 'left' : 'right']: { xs: 10, md: -60 },
       width: 48,
       height: 48,
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
       border: '1px solid rgba(0, 0, 0, 0.1)',
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
       zIndex: 200,
@@ -552,13 +607,13 @@ const NavigationArrow = ({ direction, onClick }) => (
       '&:hover': {
         backgroundColor: 'rgba(255, 255, 255, 1)',
         boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2)',
-        transform: 'translateY(-50%) scale(1.05)',
+        transform: 'translateY(-50%) scale(1.1)',
       },
     }}
     aria-label={direction === 'left' ? 'Previous' : 'Next'}
   >
     {direction === 'left'
-      ? <ArrowBackIosIcon sx={{ color: '#374151', fontSize: 20 }} />
+      ? <ArrowBackIosIcon sx={{ color: '#374151', fontSize: 20, ml: 0.5 }} />
       : <ArrowForwardIosIcon sx={{ color: '#374151', fontSize: 20 }} />}
   </IconButton>
 );
@@ -577,10 +632,6 @@ const Teams = () => {
   const len = team.length;
   
   const CEO_NAME = "Adhil Farhan";
-  const initialCenter = useMemo(() => {
-    const i = team.findIndex(m => m.name === CEO_NAME);
-    return i >= 0 ? i : 0;
-  }, [team]);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredOffset, setHoveredOffset] = useState(null);
@@ -588,7 +639,7 @@ const Teams = () => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Scroll scale effect (like other components)
+  // Scroll scale effect
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
@@ -652,7 +703,7 @@ const Teams = () => {
     if (paused || isMobile || len === 0) return;
     const id = setInterval(() => {
       setActiveIndex(prev => (prev + 1) % len);
-    }, 3000);
+    }, 3500);
     return () => clearInterval(id);
   }, [paused, len, isMobile]);
 
@@ -680,6 +731,14 @@ const Teams = () => {
     setDialogOpen(false);
     setSelectedMember(null);
   };
+
+  // Calculate offset for each team member
+  const getOffset = useCallback((index) => {
+    if (len === 0) return 0;
+    let offset = index - activeIndex;
+    if (offset < 0) offset += len;
+    return offset;
+  }, [activeIndex, len]);
 
   // Loading state
   if (loading) {
@@ -782,8 +841,6 @@ const Teams = () => {
   return (
     <>
       <style>{`
-        ${floatAnimation}
-        
         @keyframes blinkCursor {
           0%, 50% { border-color: transparent; }
           51%, 100% { border-color: #1AC99F; }
@@ -811,7 +868,7 @@ const Teams = () => {
           overflow: 'hidden',
         }}
       >
-        {/* Floating particles - Same as AdvisoryBoard */}
+        {/* Floating particles */}
         {[...Array(10)].map((_, i) => (
           <FloatingParticle
             key={i}
@@ -825,7 +882,7 @@ const Teams = () => {
 
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
           <Box sx={{ textAlign: 'center', width: '100%', maxWidth: '1000px', mx: 'auto' }}>
-            {/* Header Section - Updated to match AdvisoryBoard styling */}
+            {/* Header Section */}
             <Box sx={{ textAlign: 'center', marginBottom: '2.5rem' }}>
               {/* Badge */}
               <motion.div
@@ -856,7 +913,7 @@ const Teams = () => {
                 </div>
               </motion.div>
 
-              {/* Main Headline - Updated to match AdvisoryBoard */}
+              {/* Main Headline */}
               <h1
                 style={{
                   fontSize: 'clamp(1.5rem, 4vw, 2.8rem)',
@@ -876,7 +933,7 @@ const Teams = () => {
                 </span>
               </h1>
 
-              {/* Subtitle - Updated to match AdvisoryBoard */}
+              {/* Subtitle */}
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -897,7 +954,7 @@ const Teams = () => {
                 </h2>
               </motion.div>
 
-              {/* Description - Updated styling */}
+              {/* Description */}
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -917,7 +974,7 @@ const Teams = () => {
                     transition: 'transform 0.3s ease',
                   }}
                 >
-                  Sustainability strategists, Consultants, and engineers working as one-to plan, collaborate, and ship measurable results faster.
+                  Sustainability strategists, Consultants, and engineers working as one-to plan, collaborate, and ship measurable results faster.
                 </Typography>
               </motion.div>
             </Box>
@@ -934,10 +991,10 @@ const Teams = () => {
                   onMouseLeave={handleMouseLeave}
                   sx={{
                     mt: 8,
-                    height: 380,
+                    height: 450,
                     position: 'relative',
-                    perspective: '1200px',
-                    maxWidth: 1000,
+                    perspective: '1400px',
+                    maxWidth: 1200,
                     mx: 'auto',
                   }}
                 >
@@ -946,23 +1003,20 @@ const Teams = () => {
                   
                   <Box
                     sx={{
-                      transformStyle: 'preserve-3d',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: '2rem 0',
                       position: 'relative',
+                      width: '100%',
                       height: '100%',
-                      transition: 'all 0.5s ease',
+                      transformStyle: 'preserve-3d',
                     }}
                   >
                     {team.map((member, index) => {
-                      const offset = getOffset(index, activeIndex, len);
+                      const offset = getOffset(index);
                       return (
                         <TeamImage
                           key={member._id}
                           image={member}
                           offset={offset}
+                          activeIndex={activeIndex}
                           hovered={hoveredOffset}
                           onHover={setHoveredOffset}
                           onLeave={() => setHoveredOffset(null)}
@@ -1001,7 +1055,7 @@ const Teams = () => {
           member={selectedMember}
         />
 
-        {/* Decorative Elements - Same as AdvisoryBoard */}
+        {/* Decorative Elements */}
         <div
           style={{
             position: 'absolute',
