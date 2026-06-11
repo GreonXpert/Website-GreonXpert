@@ -1,10 +1,11 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Greon Xpert",
+  "name": "Greon Xpert",
+  "description": "Greon Xpert builds AI and IoT climate software to help companies measure, report, and reduce carbon.",
   "icons": [
     {
       "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "sizes": "16x16 24x24 32x32 48x48 64x64 128x128 256x256",
       "type": "image/x-icon"
     },
     {
@@ -18,8 +19,8 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#1AC99F",
   "background_color": "#ffffff"
 }
