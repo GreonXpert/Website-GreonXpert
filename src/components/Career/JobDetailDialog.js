@@ -64,38 +64,49 @@ const JobDetailDialog = ({ open, onClose, job, onApply }) => {
             
             {/* Job Meta Info */}
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LocationOnIcon sx={{ fontSize: 18, color: theme.palette.secondary.main }} />
-                  <Typography variant="body2" color="text.secondary">
-                    {job.location}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <ScheduleIcon sx={{ fontSize: 18, color: theme.palette.secondary.main }} />
-                  <Typography variant="body2" color="text.secondary">
-                    {job.jobType}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <StarIcon sx={{ fontSize: 18, color: theme.palette.secondary.main }} />
-                  <Typography variant="body2" color="text.secondary">
-                    {job.experienceRequired} required
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <AccessTimeIcon sx={{ fontSize: 18, color: theme.palette.secondary.main }} />
-                  <Typography variant="body2" color="text.secondary">
-                    Join in: {job.joiningTime}
-                  </Typography>
-                </Box>
-              </Grid>
+              {job.location && (
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LocationOnIcon sx={{ fontSize: 18, color: theme.palette.secondary.main }} />
+                    <Typography variant="body2" color="text.secondary">
+                      {job.location}
+                    </Typography>
+                  </Box>
+                </Grid>
+              )}
+              {job.jobType && (
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ScheduleIcon sx={{ fontSize: 18, color: theme.palette.secondary.main }} />
+                    <Typography variant="body2" color="text.secondary">
+                      {job.jobType}
+                      {job.jobType === 'Internship' && job.internshipDuration?.value
+                        ? ` (${job.internshipDuration.value} ${job.internshipDuration.unit || 'Months'})`
+                        : ''}
+                    </Typography>
+                  </Box>
+                </Grid>
+              )}
+              {job.experienceRequired && (
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <StarIcon sx={{ fontSize: 18, color: theme.palette.secondary.main }} />
+                    <Typography variant="body2" color="text.secondary">
+                      {job.experienceRequired} required
+                    </Typography>
+                  </Box>
+                </Grid>
+              )}
+              {job.joiningTime && (
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AccessTimeIcon sx={{ fontSize: 18, color: theme.palette.secondary.main }} />
+                    <Typography variant="body2" color="text.secondary">
+                      Join in: {job.joiningTime}
+                    </Typography>
+                  </Box>
+                </Grid>
+              )}
             </Grid>
           </Box>
           

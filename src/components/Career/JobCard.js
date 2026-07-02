@@ -134,24 +134,33 @@ const JobCard = ({ job, index, onJobClick }) => {
 
           {/* Job Details - Compact Layout */}
           <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-              <LocationOnIcon sx={{ fontSize: 14, color: theme.palette.primary.main, mr: 1 }} />
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                {job.location}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-              <ScheduleIcon sx={{ fontSize: 14, color: theme.palette.primary.main, mr: 1 }} />
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                {job.jobType}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-              <StarIcon sx={{ fontSize: 14, color: theme.palette.primary.main, mr: 1 }} />
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                {job.experienceRequired}
-              </Typography>
-            </Box>
+            {job.location && (
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                <LocationOnIcon sx={{ fontSize: 14, color: theme.palette.primary.main, mr: 1 }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                  {job.location}
+                </Typography>
+              </Box>
+            )}
+            {job.jobType && (
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                <ScheduleIcon sx={{ fontSize: 14, color: theme.palette.primary.main, mr: 1 }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                  {job.jobType}
+                  {job.jobType === 'Internship' && job.internshipDuration?.value
+                    ? ` (${job.internshipDuration.value} ${job.internshipDuration.unit || 'Months'})`
+                    : ''}
+                </Typography>
+              </Box>
+            )}
+            {job.experienceRequired && (
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                <StarIcon sx={{ fontSize: 14, color: theme.palette.primary.main, mr: 1 }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                  {job.experienceRequired}
+                </Typography>
+              </Box>
+            )}
           </Box>
 
           {/* Salary Range */}

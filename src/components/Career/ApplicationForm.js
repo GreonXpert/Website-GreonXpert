@@ -1,36 +1,22 @@
 // src/components/Career/ApplicationForm.js - Backend Integration
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Dialog, DialogContent, TextField, Button, Grid, Typography, Box,
-  IconButton, Alert, FormControl, InputLabel, Select, MenuItem,
-  Paper, Avatar, Step, Stepper, StepLabel, Fade, CircularProgress, Stack
+  IconButton, FormControl, InputLabel, Select, MenuItem,
+  Avatar, Step, Stepper, StepLabel, CircularProgress, Stack, Divider,
+  RadioGroup, Radio, FormControlLabel, FormGroup, Checkbox, OutlinedInput,
+  Chip, Alert
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
-import PersonIcon from '@mui/icons-material/Person';
 import SendIcon from '@mui/icons-material/Send';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import BusinessIcon from '@mui/icons-material/Business';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import EmailIcon from '@mui/icons-material/Email';
-import PhoneIcon from '@mui/icons-material/Phone';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import WorkIcon from '@mui/icons-material/Work';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import { keyframes } from '@emotion/react';
 import axios from 'axios';
 import { API_BASE } from '../../utils/api';
 
 // API Configuration
 const API_URL = `${API_BASE}/api/careers`;
-
-// Animations
-const slideUp = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
 
 // Reusable Styles for Inputs
 const commonInputStyles = (theme) => ({
@@ -51,328 +37,330 @@ const commonInputStyles = (theme) => ({
   },
 });
 
-const iconInputStyles = (theme) => ({
-  ...commonInputStyles(theme),
-  '& .MuiOutlinedInput-root': {
-    ...commonInputStyles(theme)['& .MuiOutlinedInput-root'],
-    paddingLeft: '45px',
-  },
-  '& .MuiInputLabel-root': {
-    paddingLeft: '40px',
-  },
-});
-
-// Step Components
-const BasicDetailsStep = ({ formData, handleFormChange, errors }) => {
-  const theme = useTheme();
-  return (
-    <Box>
-      <Typography variant="h6" sx={{ mb: 3, color: '#1AC99F', fontWeight: 600 }}>
-        Tell us about yourself
-      </Typography>
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="First Name"
-            value={formData.firstName}
-            onChange={(e) => handleFormChange('firstName', e.target.value)}
-            sx={iconInputStyles(theme)}
-            error={!!errors.firstName}
-            helperText={errors.firstName}
-            InputProps={{
-              startAdornment: <PersonIcon sx={{ position: 'absolute', left: 14, color: '#1AC99F' }} />
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Last Name"
-            value={formData.lastName}
-            onChange={(e) => handleFormChange('lastName', e.target.value)}
-            sx={iconInputStyles(theme)}
-            error={!!errors.lastName}
-            helperText={errors.lastName}
-            InputProps={{
-              startAdornment: <PersonIcon sx={{ position: 'absolute', left: 14, color: '#1AC99F' }} />
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Email Address"
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleFormChange('email', e.target.value)}
-            sx={iconInputStyles(theme)}
-            error={!!errors.email}
-            helperText={errors.email}
-            InputProps={{
-              startAdornment: <EmailIcon sx={{ position: 'absolute', left: 14, color: '#1AC99F' }} />
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Phone Number"
-            value={formData.phone}
-            onChange={(e) => handleFormChange('phone', e.target.value)}
-            sx={iconInputStyles(theme)}
-            error={!!errors.phone}
-            helperText={errors.phone}
-            InputProps={{
-              startAdornment: <PhoneIcon sx={{ position: 'absolute', left: 14, color: '#1AC99F' }} />
-            }}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Current Location"
-            value={formData.currentLocation}
-            onChange={(e) => handleFormChange('currentLocation', e.target.value)}
-            sx={iconInputStyles(theme)}
-            InputProps={{
-              startAdornment: <LocationOnIcon sx={{ position: 'absolute', left: 14, color: '#1AC99F' }} />
-            }}
-          />
-        </Grid>
-      </Grid>
-    </Box>
-  );
+// Groups a job's custom questions by their section, in first-seen order
+const groupQuestionsBySection = (questions) => {
+  const map = new Map();
+  (questions || []).forEach(q => {
+    const section = q.section || 'General';
+    if (!map.has(section)) map.set(section, []);
+    map.get(section).push(q);
+  });
+  return Array.from(map.entries()).map(([section, sectionQuestions]) => ({ section, questions: sectionQuestions }));
 };
 
-const ProfessionalInfoStep = ({ formData, handleFormChange, errors }) => {
-  const theme = useTheme();
-  return (
-    <Box>
-      <Typography variant="h6" sx={{ mb: 3, color: '#1AC99F', fontWeight: 600 }}>
-        Professional Experience
-      </Typography>
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth error={!!errors.experience}>
-            <InputLabel>Total Experience</InputLabel>
-            <Select
-              value={formData.experience}
-              onChange={(e) => handleFormChange('experience', e.target.value)}
-              label="Total Experience"
-              sx={commonInputStyles(theme)}
-            >
-              <MenuItem value="0-1 years">0-1 years</MenuItem>
-              <MenuItem value="1-3 years">1-3 years</MenuItem>
-              <MenuItem value="3-5 years">3-5 years</MenuItem>
-              <MenuItem value="5-8 years">5-8 years</MenuItem>
-              <MenuItem value="8+ years">8+ years</MenuItem>
-            </Select>
-            {errors.experience && <Typography variant="caption" color="error">{errors.experience}</Typography>}
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Notice Period</InputLabel>
-            <Select
-              value={formData.noticePeriod}
-              onChange={(e) => handleFormChange('noticePeriod', e.target.value)}
-              label="Notice Period"
-              sx={commonInputStyles(theme)}
-            >
-              <MenuItem value="Immediate">Immediate</MenuItem>
-              <MenuItem value="15 days">15 days</MenuItem>
-              <MenuItem value="1 month">1 month</MenuItem>
-              <MenuItem value="2 months">2 months</MenuItem>
-              <MenuItem value="3 months">3 months</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Current/Desired Position"
-            value={formData.position}
-            onChange={(e) => handleFormChange('position', e.target.value)}
-            sx={iconInputStyles(theme)}
-            error={!!errors.position}
-            helperText={errors.position}
-            InputProps={{
-              startAdornment: <WorkIcon sx={{ position: 'absolute', left: 14, color: '#1AC99F' }} />
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Expected Salary (Optional)"
-            value={formData.expectedSalary}
-            onChange={(e) => handleFormChange('expectedSalary', e.target.value)}
-            sx={commonInputStyles(theme)}
-            placeholder="e.g., 5-8 LPA"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Skills (comma separated)"
-            value={formData.skills}
-            onChange={(e) => handleFormChange('skills', e.target.value)}
-            sx={commonInputStyles(theme)}
-            placeholder="React, Node.js, Python..."
-          />
-        </Grid>
-      </Grid>
-    </Box>
-  );
+// Splits a free-text full name into first/last, falling back sensibly for single-word names
+const splitFullName = (fullName) => {
+  const trimmed = (fullName || '').trim();
+  if (!trimmed) return { firstName: '', lastName: '' };
+  const parts = trimmed.split(/\s+/);
+  return {
+    firstName: parts[0],
+    lastName: parts.length > 1 ? parts.slice(1).join(' ') : parts[0]
+  };
 };
 
-const EducationStep = ({ formData, handleFormChange, errors }) => {
-  const theme = useTheme();
-  return (
-    <Box>
-      <Typography variant="h6" sx={{ mb: 3, color: '#1AC99F', fontWeight: 600 }}>
-        Education & Additional Information
-      </Typography>
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Highest Degree"
-            value={formData.degree}
-            onChange={(e) => handleFormChange('degree', e.target.value)}
-            sx={commonInputStyles(theme)}
-            error={!!errors.degree}
-            helperText={errors.degree}
-            placeholder="e.g., B.Tech, MBA, M.Sc"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Field of Study"
-            value={formData.field}
-            onChange={(e) => handleFormChange('field', e.target.value)}
-            sx={commonInputStyles(theme)}
-            error={!!errors.field}
-            helperText={errors.field}
-            placeholder="e.g., Computer Science, Business"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Institution"
-            value={formData.institution}
-            onChange={(e) => handleFormChange('institution', e.target.value)}
-            sx={commonInputStyles(theme)}
-            error={!!errors.institution}
-            helperText={errors.institution}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Graduation Year"
-            type="number"
-            value={formData.year}
-            onChange={(e) => handleFormChange('year', e.target.value)}
-            sx={commonInputStyles(theme)}
-            error={!!errors.year}
-            helperText={errors.year}
-            InputProps={{
-              inputProps: { min: 1950, max: 2030 }
-            }}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Why do you want to join Greon Xpert?"
-            multiline
-            rows={4}
-            value={formData.motivation}
-            onChange={(e) => handleFormChange('motivation', e.target.value)}
-            sx={commonInputStyles(theme)}
-            placeholder="Tell us about your interest in environmental technology and sustainability..."
-          />
-        </Grid>
-      </Grid>
-    </Box>
-  );
+// The backend requires firstName/lastName/email/phone/resumeUrl on every application.
+// Rather than asking for them again when the admin already drafted equivalent custom
+// questions (e.g. "Full name", "Email", "Link to your CV"), find the best-matching
+// question for each and reuse its answer — so applicants aren't asked twice.
+const buildContactQuestionMap = (questions) => {
+  const map = {};
+  (questions || []).forEach(q => {
+    const text = q.questionText.toLowerCase();
+    if (!map.resumeUrl && q.questionType === 'link' && /(cv|resume)/.test(text)) {
+      map.resumeUrl = q._id;
+    } else if (!map.email && /email/.test(text)) {
+      map.email = q._id;
+    } else if (!map.phone && /(phone|whatsapp|mobile)/.test(text)) {
+      map.phone = q._id;
+    } else if (!map.fullName && /\bname\b/.test(text) && !/(college|university|institution|company)/.test(text)) {
+      map.fullName = q._id;
+    }
+  });
+  return map;
 };
 
-const DocumentsStep = ({ formData, handleFormChange, handleFileUpload, errors }) => {
-  const theme = useTheme();
-  return (
-    <Box>
-      <Typography variant="h6" sx={{ mb: 3, color: '#1AC99F', fontWeight: 600 }}>
-        Documents & Consent
-      </Typography>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Paper sx={{ 
-            p: 3, 
-            border: '2px dashed #1AC99F', 
-            borderRadius: 2,
-            textAlign: 'center',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              backgroundColor: '#f0fdf4',
-              borderColor: '#0E9A78'
-            }
-          }}>
-            <input
-              accept=".pdf"
-              style={{ display: 'none' }}
-              id="resume-upload"
-              type="file"
-              onChange={handleFileUpload}
+// Renders a single custom question using the answer type it was drafted with
+const QuestionField = ({ q, answers, handleAnswerChange, errors, theme }) => {
+  const errorKey = `q_${q._id}`;
+
+  if (q.questionType === 'text' || q.questionType === 'link') {
+    return (
+      <TextField
+        fullWidth label={q.questionText} required={q.required}
+        placeholder={q.questionType === 'link' ? 'https://...' : undefined}
+        value={answers[q._id] || ''}
+        onChange={(e) => handleAnswerChange(q._id, e.target.value)}
+        sx={commonInputStyles(theme)}
+        error={!!errors[errorKey]} helperText={errors[errorKey]}
+      />
+    );
+  }
+
+  if (q.questionType === 'textarea') {
+    return (
+      <TextField
+        fullWidth multiline rows={4} label={q.questionText} required={q.required}
+        value={answers[q._id] || ''}
+        onChange={(e) => handleAnswerChange(q._id, e.target.value)}
+        sx={commonInputStyles(theme)}
+        error={!!errors[errorKey]} helperText={errors[errorKey]}
+      />
+    );
+  }
+
+  if (q.questionType === 'number') {
+    return (
+      <TextField
+        fullWidth type="number" label={q.questionText} required={q.required}
+        value={answers[q._id] ?? ''}
+        onChange={(e) => handleAnswerChange(q._id, e.target.value)}
+        sx={commonInputStyles(theme)}
+        error={!!errors[errorKey]} helperText={errors[errorKey]}
+      />
+    );
+  }
+
+  if (q.questionType === 'yesno') {
+    return (
+      <Box>
+        <Typography variant="body2" sx={{ mb: 0.5 }}>{q.questionText}{q.required && ' *'}</Typography>
+        <RadioGroup
+          row
+          value={answers[q._id] === undefined ? '' : String(answers[q._id])}
+          onChange={(e) => handleAnswerChange(q._id, e.target.value === 'true')}
+        >
+          <FormControlLabel value="true" control={<Radio />} label="Yes" />
+          <FormControlLabel value="false" control={<Radio />} label="No" />
+        </RadioGroup>
+        {errors[errorKey] && <Typography variant="caption" color="error">{errors[errorKey]}</Typography>}
+      </Box>
+    );
+  }
+
+  if (q.questionType === 'radio') {
+    return (
+      <Box>
+        <Typography variant="body2" sx={{ mb: 0.5 }}>{q.questionText}{q.required && ' *'}</Typography>
+        <RadioGroup value={answers[q._id] ?? ''} onChange={(e) => handleAnswerChange(q._id, e.target.value)}>
+          {(q.options || []).map((opt, oi) => (
+            <FormControlLabel key={oi} value={opt} control={<Radio />} label={opt} />
+          ))}
+        </RadioGroup>
+        {errors[errorKey] && <Typography variant="caption" color="error">{errors[errorKey]}</Typography>}
+      </Box>
+    );
+  }
+
+  if (q.questionType === 'checkbox') {
+    const selected = Array.isArray(answers[q._id]) ? answers[q._id] : [];
+    return (
+      <Box>
+        <Typography variant="body2" sx={{ mb: 0.5 }}>{q.questionText}{q.required && ' *'}</Typography>
+        <FormGroup>
+          {(q.options || []).map((opt, oi) => (
+            <FormControlLabel
+              key={oi}
+              control={
+                <Checkbox
+                  checked={selected.includes(opt)}
+                  onChange={(e) => {
+                    const next = e.target.checked ? [...selected, opt] : selected.filter(s => s !== opt);
+                    handleAnswerChange(q._id, next);
+                  }}
+                />
+              }
+              label={opt}
             />
-            <label htmlFor="resume-upload">
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                {formData.resume ? <AttachFileIcon sx={{ color: '#1AC99F', mr: 1 }} /> : <CloudUploadIcon sx={{ color: '#1AC99F', fontSize: 40 }} />}
-              </Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                {formData.resume ? formData.resume.name : 'Upload Your Resume'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                PDF only, Max 5MB
-              </Typography>
-              <Button
-                variant="outlined"
-                component="span"
-                sx={{ textTransform: 'none', borderRadius: 2 }}
-              >
-                {formData.resume ? 'Change Resume' : 'Browse Files'}
-              </Button>
-            </label>
-            {errors.resume && <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>{errors.resume}</Typography>}
-          </Paper>
-        </Grid>
-        
-        <Grid item xs={12}>
-          <Box sx={{ 
-            p: 2, 
-            bgcolor: '#f8f9fa', 
-            borderRadius: 2,
-            border: '1px solid #e9ecef'
-          }}>
-            <Typography variant="body2" sx={{ mb: 2, fontWeight: 600 }}>
-              Data Processing Consent
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-              By submitting this application, you consent to Greon Xpert processing your personal data 
-              for recruitment purposes in accordance with applicable data protection laws. Your data will 
-              be stored securely and used only for recruitment-related activities.
-            </Typography>
-          </Box>
-        </Grid>
+          ))}
+        </FormGroup>
+        {errors[errorKey] && <Typography variant="caption" color="error">{errors[errorKey]}</Typography>}
+      </Box>
+    );
+  }
+
+  if (q.questionType === 'dropdown') {
+    return (
+      <FormControl fullWidth required={q.required} error={!!errors[errorKey]}>
+        <InputLabel>{q.questionText}</InputLabel>
+        <Select value={answers[q._id] ?? ''} label={q.questionText} onChange={(e) => handleAnswerChange(q._id, e.target.value)}>
+          {(q.options || []).map((opt, oi) => <MenuItem key={oi} value={opt}>{opt}</MenuItem>)}
+        </Select>
+        {errors[errorKey] && <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>{errors[errorKey]}</Typography>}
+      </FormControl>
+    );
+  }
+
+  if (q.questionType === 'multiselect') {
+    const selected = Array.isArray(answers[q._id]) ? answers[q._id] : [];
+    return (
+      <FormControl fullWidth required={q.required} error={!!errors[errorKey]}>
+        <InputLabel>{q.questionText}</InputLabel>
+        <Select
+          multiple
+          value={selected}
+          onChange={(e) => {
+            const { value } = e.target;
+            handleAnswerChange(q._id, typeof value === 'string' ? value.split(',') : value);
+          }}
+          input={<OutlinedInput label={q.questionText} />}
+          renderValue={(sel) => (
+            <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+              {sel.map((val) => <Chip key={val} label={val} size="small" />)}
+            </Stack>
+          )}
+        >
+          {(q.options || []).map((opt, oi) => (
+            <MenuItem key={oi} value={opt}>
+              <Checkbox checked={selected.includes(opt)} />
+              {opt}
+            </MenuItem>
+          ))}
+        </Select>
+        {errors[errorKey] && <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>{errors[errorKey]}</Typography>}
+      </FormControl>
+    );
+  }
+
+  return null;
+};
+
+// One step per drafted question section
+const SectionStep = ({ section, questions, answers, handleAnswerChange, errors }) => {
+  const theme = useTheme();
+  return (
+    <Box>
+      <Typography variant="h6" sx={{ mb: 3, color: '#1AC99F', fontWeight: 600 }}>
+        {section}
+      </Typography>
+      <Stack spacing={3}>
+        {questions.map((q) => (
+          <QuestionField key={q._id} q={q} answers={answers} handleAnswerChange={handleAnswerChange} errors={errors} theme={theme} />
+        ))}
+      </Stack>
+    </Box>
+  );
+};
+
+// Fallback step shown only for whichever backend-required contact fields (name/email/
+// phone/resume link) could NOT be matched to one of the admin's drafted questions
+const ContactFallbackStep = ({ missingFields, contactOverrides, handleContactOverride, errors }) => {
+  const theme = useTheme();
+  return (
+    <Box>
+      <Typography variant="h6" sx={{ mb: 1, color: '#1AC99F', fontWeight: 600 }}>
+        A Few More Details
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        We need these to process your application.
+      </Typography>
+      <Grid container spacing={3}>
+        {missingFields.includes('firstName') && (
+          <>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth label="First Name" required
+                value={contactOverrides.firstName}
+                onChange={(e) => handleContactOverride('firstName', e.target.value)}
+                sx={commonInputStyles(theme)}
+                error={!!errors.firstName} helperText={errors.firstName}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth label="Last Name" required
+                value={contactOverrides.lastName}
+                onChange={(e) => handleContactOverride('lastName', e.target.value)}
+                sx={commonInputStyles(theme)}
+                error={!!errors.lastName} helperText={errors.lastName}
+              />
+            </Grid>
+          </>
+        )}
+        {missingFields.includes('email') && (
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth label="Email Address" type="email" required
+              value={contactOverrides.email}
+              onChange={(e) => handleContactOverride('email', e.target.value)}
+              sx={commonInputStyles(theme)}
+              error={!!errors.email} helperText={errors.email}
+            />
+          </Grid>
+        )}
+        {missingFields.includes('phone') && (
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth label="Phone Number" required
+              placeholder="+91XXXXXXXXXX"
+              value={contactOverrides.phone}
+              onChange={(e) => handleContactOverride('phone', e.target.value)}
+              sx={commonInputStyles(theme)}
+              error={!!errors.phone} helperText={errors.phone}
+            />
+          </Grid>
+        )}
+        {missingFields.includes('resumeUrl') && (
+          <Grid item xs={12}>
+            <TextField
+              fullWidth label="Resume / CV Link" required
+              placeholder="https://drive.google.com/..."
+              value={contactOverrides.resumeUrl}
+              onChange={(e) => handleContactOverride('resumeUrl', e.target.value)}
+              sx={commonInputStyles(theme)}
+              error={!!errors.resumeUrl}
+              helperText={errors.resumeUrl || 'Upload to Google Drive/Dropbox, set sharing to "Anyone with the link", and paste it here.'}
+            />
+          </Grid>
+        )}
       </Grid>
     </Box>
   );
 };
+
+const ReviewStep = ({ contact, consent, setConsent, errors }) => (
+  <Box>
+    <Typography variant="h6" sx={{ mb: 3, color: '#1AC99F', fontWeight: 600 }}>
+      Review & Consent
+    </Typography>
+    <Grid container spacing={2} sx={{ mb: 3 }}>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="caption" color="text.secondary">Name</Typography>
+        <Typography variant="body1">{contact.firstName} {contact.lastName}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="caption" color="text.secondary">Email</Typography>
+        <Typography variant="body1">{contact.email}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="caption" color="text.secondary">Phone</Typography>
+        <Typography variant="body1">{contact.phone}</Typography>
+      </Grid>
+      <Grid item xs={12} sm={6}>
+        <Typography variant="caption" color="text.secondary">Resume / CV</Typography>
+        <Typography variant="body1" sx={{ wordBreak: 'break-all' }}>{contact.resumeUrl}</Typography>
+      </Grid>
+    </Grid>
+    <Divider sx={{ mb: 3 }} />
+    <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #e9ecef' }}>
+      <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
+        Data Processing Consent
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6, mb: 1.5 }}>
+        By submitting this application, you consent to Greon Xpert processing your personal data
+        for recruitment purposes in accordance with applicable data protection laws. Your data will
+        be stored securely and used only for recruitment-related activities.
+      </Typography>
+      <FormControlLabel
+        control={<Checkbox checked={consent} onChange={(e) => setConsent(e.target.checked)} />}
+        label="I consent to Greon Xpert processing my personal data for recruitment purposes. *"
+      />
+      {errors.consentToDataProcessing && (
+        <Typography variant="caption" color="error" display="block">{errors.consentToDataProcessing}</Typography>
+      )}
+    </Box>
+  </Box>
+);
 
 const SuccessStep = ({ onClose, applicationId }) => (
   <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -383,7 +371,7 @@ const SuccessStep = ({ onClose, applicationId }) => (
       Application Submitted Successfully!
     </Typography>
     <Typography sx={{ mb: 3, color: 'text.secondary' }}>
-      Thank you for your interest in joining Greon Xpert. We have received your application 
+      Thank you for your interest in joining Greon Xpert. We have received your application
       and will review it carefully. If your profile matches our requirements, we'll contact you soon.
     </Typography>
     {applicationId && (
@@ -391,138 +379,146 @@ const SuccessStep = ({ onClose, applicationId }) => (
         Application ID: <strong>{applicationId}</strong>
       </Typography>
     )}
-    <Button 
-      variant="contained" 
+    <Button
+      variant="contained"
       onClick={onClose}
-      sx={{ 
-        bgcolor: '#1AC99F', 
-        '&:hover': { bgcolor: '#0E9A78' },
-        borderRadius: 2,
-        px: 4
-      }}
+      sx={{ bgcolor: '#1AC99F', '&:hover': { bgcolor: '#0E9A78' }, borderRadius: 2, px: 4 }}
     >
       Close
     </Button>
   </Box>
 );
 
+const emptyContactOverrides = { firstName: '', lastName: '', email: '', phone: '', resumeUrl: '' };
+
 // Main Application Form Component
 const ApplicationForm = ({ open, onClose, selectedJob, onSuccess, onError }) => {
-  const theme = useTheme();
   const [activeStep, setActiveStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [applicationId, setApplicationId] = useState('');
-  
-  const [formData, setFormData] = useState({
-    firstName: '', lastName: '', email: '', phone: '', currentLocation: '',
-    experience: '', position: '', noticePeriod: '', expectedSalary: '', skills: '',
-    degree: '', field: '', institution: '', year: '', motivation: '', resume: null,
-    consentToDataProcessing: true
-  });
+
+  const [answers, setAnswers] = useState({});
+  const [contactOverrides, setContactOverrides] = useState(emptyContactOverrides);
+  const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const steps = ['Basic Details', 'Professional Info', 'Education', 'Documents', 'Submitted'];
+  const sections = useMemo(() => groupQuestionsBySection(selectedJob?.customQuestions), [selectedJob]);
+  const questionMap = useMemo(() => buildContactQuestionMap(selectedJob?.customQuestions), [selectedJob]);
 
-  // Reset form when dialog is closed
+  const missingContactFields = useMemo(() => {
+    const missing = [];
+    if (!questionMap.fullName) missing.push('firstName');
+    if (!questionMap.email) missing.push('email');
+    if (!questionMap.phone) missing.push('phone');
+    if (!questionMap.resumeUrl) missing.push('resumeUrl');
+    return missing;
+  }, [questionMap]);
+
+  const stepDefs = useMemo(() => {
+    const steps = sections.map(s => ({ key: `section::${s.section}`, label: s.section, questions: s.questions }));
+    if (missingContactFields.length > 0) {
+      steps.push({ key: 'contact', label: 'Contact Details' });
+    }
+    steps.push({ key: 'review', label: 'Review & Consent' });
+    steps.push({ key: 'submitted', label: 'Submitted' });
+    return steps;
+  }, [sections, missingContactFields]);
+
+  // Resolves the final contact value for a field, preferring a matched custom question's
+  // answer and falling back to whatever was typed in the fallback Contact Details step
+  const getContact = () => {
+    const name = questionMap.fullName ? splitFullName(answers[questionMap.fullName]) : null;
+    return {
+      firstName: name ? name.firstName : contactOverrides.firstName,
+      lastName: name ? name.lastName : contactOverrides.lastName,
+      email: questionMap.email ? (answers[questionMap.email] || '') : contactOverrides.email,
+      phone: questionMap.phone ? (answers[questionMap.phone] || '') : contactOverrides.phone,
+      resumeUrl: questionMap.resumeUrl ? (answers[questionMap.resumeUrl] || '') : contactOverrides.resumeUrl
+    };
+  };
+
+  const resetForm = () => {
+    setActiveStep(0);
+    setAnswers({});
+    setContactOverrides(emptyContactOverrides);
+    setConsent(false);
+    setErrors({});
+    setApplicationId('');
+  };
+
   const handleClose = () => {
     onClose();
-    setTimeout(() => {
-      setActiveStep(0);
-      setFormData({
-        firstName: '', lastName: '', email: '', phone: '', currentLocation: '',
-        experience: '', position: '', noticePeriod: '', expectedSalary: '', skills: '',
-        degree: '', field: '', institution: '', year: '', motivation: '', resume: null,
-        consentToDataProcessing: true
-      });
-      setErrors({});
-      setApplicationId('');
-    }, 300);
+    setTimeout(resetForm, 300);
   };
 
-  const handleFormChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
+  const handleAnswerChange = (questionId, value) => {
+    setAnswers(prev => ({ ...prev, [questionId]: value }));
+    const errorKey = `q_${questionId}`;
+    if (errors[errorKey]) setErrors(prev => ({ ...prev, [errorKey]: null }));
   };
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    const newErrors = { ...errors };
-
-    if (!file) return;
-
-    if (file.type !== 'application/pdf') {
-      newErrors.resume = 'Please upload a PDF file only.';
-    } else if (file.size > 5 * 1024 * 1024) {
-      newErrors.resume = 'File size cannot exceed 5MB.';
-    } else {
-      setFormData(prev => ({ ...prev, resume: file }));
-      delete newErrors.resume;
-    }
-
-    setErrors(newErrors);
+  const handleContactOverride = (field, value) => {
+    setContactOverrides(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
   };
 
   const validateStep = (step) => {
     const newErrors = {};
 
-    if (step === 0) {
-      if (!formData.firstName.trim()) newErrors.firstName = 'First name is required.';
-      if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required.';
-      if (!formData.email) {
-        newErrors.email = 'Email is required.';
-      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = 'Email is invalid.';
+    if (step.key.startsWith('section::')) {
+      step.questions.forEach(q => {
+        if (!q.required) return;
+        const val = answers[q._id];
+        const isEmpty = val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0);
+        if (isEmpty) newErrors[`q_${q._id}`] = 'This question is required.';
+      });
+    }
+
+    if (step.key === 'contact') {
+      if (missingContactFields.includes('firstName')) {
+        if (!contactOverrides.firstName.trim()) newErrors.firstName = 'First name is required.';
+        if (!contactOverrides.lastName.trim()) newErrors.lastName = 'Last name is required.';
       }
-      if (!formData.phone) newErrors.phone = 'Phone number is required.';
-    }
-
-    if (step === 1) {
-      if (!formData.experience) newErrors.experience = 'Experience is required.';
-      if (!formData.position.trim()) newErrors.position = 'Position is required.';
-    }
-
-    if (step === 2) {
-      if (!formData.degree.trim()) newErrors.degree = 'Degree is required.';
-      if (!formData.field.trim()) newErrors.field = 'Field of study is required.';
-      if (!formData.institution.trim()) newErrors.institution = 'Institution is required.';
-      if (!formData.year) {
-        newErrors.year = 'Graduation year is required.';
-      } else if (formData.year < 1950 || formData.year > 2030) {
-        newErrors.year = 'Please enter a valid graduation year.';
+      if (missingContactFields.includes('email')) {
+        if (!/\S+@\S+\.\S+/.test(contactOverrides.email)) newErrors.email = 'Enter a valid email address.';
+      }
+      if (missingContactFields.includes('phone')) {
+        if (!/^[+]?[0-9]{10,15}$/.test(contactOverrides.phone)) newErrors.phone = 'Enter a valid phone number.';
+      }
+      if (missingContactFields.includes('resumeUrl')) {
+        if (!/^https?:\/\/.+/.test(contactOverrides.resumeUrl.trim())) newErrors.resumeUrl = 'Provide a valid resume/CV link.';
       }
     }
 
-    if (step === 3) {
-      if (!formData.resume) newErrors.resume = 'Please upload your resume.';
+    if (step.key === 'review') {
+      const contact = getContact();
+      if (!contact.firstName.trim() || !contact.lastName.trim()) newErrors.name = 'Name is missing.';
+      if (!/\S+@\S+\.\S+/.test(contact.email)) newErrors.email = 'A valid email is missing.';
+      if (!/^[+]?[0-9]{10,15}$/.test(contact.phone)) newErrors.phone = 'A valid phone number is missing.';
+      if (!/^https?:\/\/.+/.test(contact.resumeUrl.trim())) newErrors.resumeUrl = 'A resume/CV link is missing.';
+      if (!consent) newErrors.consentToDataProcessing = 'You must consent to data processing to apply.';
     }
 
     return newErrors;
   };
 
   const handleNext = () => {
-    const newErrors = validateStep(activeStep);
+    const newErrors = validateStep(stepDefs[activeStep]);
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+      setErrors(prev => ({ ...prev, ...newErrors }));
       return;
     }
-
-    if (activeStep < steps.length - 2) {
-      setActiveStep(prev => prev + 1);
-    }
+    if (activeStep < stepDefs.length - 2) setActiveStep(prev => prev + 1);
   };
 
   const handleBack = () => {
-    if (activeStep > 0) {
-      setActiveStep(prev => prev - 1);
-    }
+    if (activeStep > 0) setActiveStep(prev => prev - 1);
   };
 
   const handleSubmit = async () => {
-    const newErrors = validateStep(activeStep);
+    const newErrors = validateStep(stepDefs[activeStep]);
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+      setErrors(prev => ({ ...prev, ...newErrors }));
       return;
     }
 
@@ -534,57 +530,21 @@ const ApplicationForm = ({ open, onClose, selectedJob, onSuccess, onError }) => 
     setIsSubmitting(true);
 
     try {
-      // Prepare form data for submission
-      const submitData = new FormData();
-      
-      // Basic information
-      submitData.append('firstName', formData.firstName);
-      submitData.append('lastName', formData.lastName);
-      submitData.append('email', formData.email);
-      submitData.append('phone', formData.phone);
-      submitData.append('experience', formData.experience);
-      submitData.append('position', formData.position);
-      submitData.append('noticePeriod', formData.noticePeriod);
-      submitData.append('consentToDataProcessing', formData.consentToDataProcessing);
-      
-      // Optional fields
-      if (formData.currentLocation) submitData.append('location.current', formData.currentLocation);
-      if (formData.expectedSalary) submitData.append('expectedSalary', formData.expectedSalary);
-      if (formData.motivation) submitData.append('motivation', formData.motivation);
-      
-      // Skills array
-      if (formData.skills) {
-        const skillsArray = formData.skills.split(',').map(skill => skill.trim()).filter(Boolean);
-        submitData.append('skills', JSON.stringify(skillsArray));
-      }
-      
-      // Education information
-      const education = {
-        degree: formData.degree,
-        field: formData.field,
-        institution: formData.institution,
-        year: parseInt(formData.year)
+      const contact = getContact();
+      const payload = {
+        firstName: contact.firstName,
+        lastName: contact.lastName,
+        email: contact.email,
+        phone: contact.phone,
+        resumeUrl: contact.resumeUrl,
+        consentToDataProcessing: true,
+        answers: (selectedJob.customQuestions || []).map(q => ({
+          questionId: q._id,
+          answer: answers[q._id]
+        }))
       };
-      submitData.append('education.degree', education.degree);
-      submitData.append('education.field', education.field);
-      submitData.append('education.institution', education.institution);
-      submitData.append('education.year', education.year);
-      
-      // Resume file
-      if (formData.resume) {
-        submitData.append('resume', formData.resume);
-      }
 
-      // Submit to backend
-      const response = await axios.post(
-        `${API_URL}/${selectedJob._id}/apply`,
-        submitData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      const response = await axios.post(`${API_URL}/${selectedJob._id}/apply`, payload);
 
       if (response.data?.success) {
         setApplicationId(response.data.data?.applicationId || '');
@@ -602,11 +562,14 @@ const ApplicationForm = ({ open, onClose, selectedJob, onSuccess, onError }) => 
     }
   };
 
+  const currentStep = stepDefs[activeStep];
+  const currentKey = currentStep?.key;
+
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose} 
-      maxWidth="md" 
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="md"
       fullWidth
       PaperProps={{ sx: { borderRadius: 3, minHeight: '70vh' } }}
     >
@@ -626,52 +589,69 @@ const ApplicationForm = ({ open, onClose, selectedJob, onSuccess, onError }) => 
               {selectedJob.jobRole}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Position: {selectedJob.jobRole} • Experience: {selectedJob.experienceRequired} • Location: {selectedJob.location}
+              {[
+                selectedJob.experienceRequired && `Experience: ${selectedJob.experienceRequired}`,
+                selectedJob.location && `Location: ${selectedJob.location}`
+              ].filter(Boolean).join(' • ')}
             </Typography>
           </Box>
         )}
 
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((label, index) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
+        {!selectedJob && (
+          <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
+            No job selected. Please close this and pick a role to apply for.
+          </Alert>
+        )}
+
+        <Stepper activeStep={activeStep} sx={{ mb: 4, flexWrap: 'wrap', rowGap: 2 }}>
+          {stepDefs.map((step) => (
+            <Step key={step.key}>
+              <StepLabel>{step.label}</StepLabel>
             </Step>
           ))}
         </Stepper>
 
         <DialogContent sx={{ px: 0 }}>
-          {activeStep === 0 && <BasicDetailsStep formData={formData} handleFormChange={handleFormChange} errors={errors} />}
-          {activeStep === 1 && <ProfessionalInfoStep formData={formData} handleFormChange={handleFormChange} errors={errors} />}
-          {activeStep === 2 && <EducationStep formData={formData} handleFormChange={handleFormChange} errors={errors} />}
-          {activeStep === 3 && <DocumentsStep formData={formData} handleFormChange={handleFormChange} handleFileUpload={handleFileUpload} errors={errors} />}
-          {activeStep === 4 && <SuccessStep onClose={handleClose} applicationId={applicationId} />}
+          {currentKey?.startsWith('section::') && (
+            <SectionStep
+              section={currentStep.label}
+              questions={currentStep.questions}
+              answers={answers}
+              handleAnswerChange={handleAnswerChange}
+              errors={errors}
+            />
+          )}
+          {currentKey === 'contact' && (
+            <ContactFallbackStep
+              missingFields={missingContactFields}
+              contactOverrides={contactOverrides}
+              handleContactOverride={handleContactOverride}
+              errors={errors}
+            />
+          )}
+          {currentKey === 'review' && (
+            <ReviewStep contact={getContact()} consent={consent} setConsent={setConsent} errors={errors} />
+          )}
+          {currentKey === 'submitted' && (
+            <SuccessStep onClose={handleClose} applicationId={applicationId} />
+          )}
         </DialogContent>
 
-        {activeStep < steps.length - 1 && (
+        {currentKey !== 'submitted' && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-            <Button
-              onClick={handleBack}
-              disabled={activeStep === 0}
-              sx={{ textTransform: 'none' }}
-            >
+            <Button onClick={handleBack} disabled={activeStep === 0} sx={{ textTransform: 'none' }}>
               Back
             </Button>
-            
-            {activeStep === steps.length - 2 ? (
+
+            {activeStep === stepDefs.length - 2 ? (
               <Button
                 variant="contained"
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !selectedJob}
                 startIcon={isSubmitting ? <CircularProgress size={16} /> : <SendIcon />}
-                sx={{ 
-                  textTransform: 'none', 
-                  borderRadius: 2, 
-                  px: 4, 
-                  py: 1.2, 
-                  fontSize: '1rem', 
-                  fontWeight: 600,
-                  bgcolor: '#1AC99F',
-                  '&:hover': { bgcolor: '#0E9A78' }
+                sx={{
+                  textTransform: 'none', borderRadius: 2, px: 4, py: 1.2, fontSize: '1rem', fontWeight: 600,
+                  bgcolor: '#1AC99F', '&:hover': { bgcolor: '#0E9A78' }
                 }}
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Application'}
@@ -680,11 +660,7 @@ const ApplicationForm = ({ open, onClose, selectedJob, onSuccess, onError }) => 
               <Button
                 variant="contained"
                 onClick={handleNext}
-                sx={{ 
-                  textTransform: 'none',
-                  bgcolor: '#1AC99F',
-                  '&:hover': { bgcolor: '#0E9A78' }
-                }}
+                sx={{ textTransform: 'none', bgcolor: '#1AC99F', '&:hover': { bgcolor: '#0E9A78' } }}
               >
                 Next
               </Button>
