@@ -1,7 +1,8 @@
 // src/services/imageService.js
 import axios from 'axios';
+import { API_BASE } from '../utils/api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = API_BASE || 'http://localhost:5000';
 
 // Axios instance without auth
 const axiosInstance = axios.create({

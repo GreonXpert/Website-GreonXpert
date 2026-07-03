@@ -12,9 +12,8 @@ import JobCard from '../components/Career/JobCard';
 import JobDetailDialog from '../components/Career/JobDetailDialog';
 import ApplicationForm from '../components/Career/ApplicationForm';
 import NoOpenings from '../components/Career/NoOpenings';
-
+import { API_BASE } from '../utils/api';
 // FIXED: Get API_BASE from your utils/api.js
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
 const API_URL = `${API_BASE}/api/careers`;
 
 // Animations from TrustedByLeaders theme

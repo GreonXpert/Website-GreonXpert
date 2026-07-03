@@ -1,8 +1,9 @@
 // src/services/heroService.js
 import axios from 'axios';
+import { API_BASE } from '../utils/api';
 
 // Base URL for API calls (can be changed to your actual API endpoint)
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = API_BASE || 'http://localhost:5000';
 
 // Create axios instance with defaults
 const apiClient = axios.create({

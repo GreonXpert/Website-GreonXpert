@@ -1,8 +1,8 @@
 // src/services/service.js
 import axios from 'axios';
-
+import { API_BASE } from '../utils/api';
 // Base URL for API calls
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.example.com';
+const API_BASE_URL = API_BASE || 'https://api.example.com';
 
 // Create axios instance with defaults
 const apiClient = axios.create({

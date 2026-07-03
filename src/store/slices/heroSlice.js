@@ -1,8 +1,9 @@
 // src/store/slices/heroSlice.js - Updated to properly fetch from backend
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { API_BASE } from '../../utils/api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = API_BASE;
 
 // Async thunk for fetching hero content
 export const fetchHeroContent = createAsyncThunk(

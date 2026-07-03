@@ -1,7 +1,8 @@
 // src/services/contentService.js
 import axios from 'axios';
+import { API_BASE } from '../utils/api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const API_URL = API_BASE;
 
 // Get all content sections
 export const getAllContent = async () => {

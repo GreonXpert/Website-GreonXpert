@@ -229,7 +229,7 @@ const BlogCard = forwardRef(({ story, categoryColor, index, onClick }, ref) => {
           }}
         >
           <img
-            src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${story.image}` || '/placeholder-image.jpg'}
+            src={`${API_BASE || 'http://localhost:5000'}${story.image}` || '/placeholder-image.jpg'}
             alt={story.title}
             loading="lazy"
             style={{
