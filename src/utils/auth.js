@@ -1,5 +1,6 @@
 //src/utils/auth.js
 // Utility functions for authentication
+//testing 
 
 /**
  * Get authentication token from localStorage

@@ -40,6 +40,7 @@ function App() {
             flexDirection: 'column',
             minHeight: '100vh'
           }}>
+            
             <Navbar />
             <Box sx={{ flexGrow: 0 }}>
               <Routes>
