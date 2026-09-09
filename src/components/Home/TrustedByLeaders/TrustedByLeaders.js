@@ -26,7 +26,7 @@ import PublicIcon from '@mui/icons-material/Public';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import EcoIcon from '@mui/icons-material/Nature';
 import AssessmentIcon from '@mui/icons-material/Assessment';
-import { API_BASE } from '../../../utils/api';
+import { API_BASE, SOCKET_URL } from '../../../utils/api';
 
 // Glittering animation
 const glitterAnimation = keyframes`
@@ -426,7 +426,7 @@ const TrustedByLeaders = () => {
 
     fetchData();
 
-    const socket = io(API_URL);
+    const socket = io(SOCKET_URL);
     socket.on('partnerships-updated', (data) => {
       if (data.success) {
         console.log("Partnerships updated in real-time:", data.data);

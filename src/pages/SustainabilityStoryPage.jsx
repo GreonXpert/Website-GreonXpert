@@ -52,7 +52,7 @@ import FeaturedStoryCard from '../components/SustainabilityStory/FeaturedStoryCa
 import BlogDialogContent from '../components/SustainabilityStory/BlogDialogContent';
 import VideoDialogContent from '../components/SustainabilityStory/VideoDialogContent';
 import ResourceDocument from '../components/SustainabilityStory/ResourceDocument';
-import { API_BASE } from '../utils/api';
+import { API_BASE, SOCKET_URL } from '../utils/api';
 
 // ✅ API Configuration
 const API_URL = `${API_BASE}/api/stories`;
@@ -217,7 +217,7 @@ const SustainabilityStoryPage = () => {
     }
 
     console.log('🔌 Creating new socket connection...');
-    const socket = io(API_BASE, {
+    const socket = io(SOCKET_URL, {
       transports: ['websocket'],
       upgrade: true,
       rememberUpgrade: true,

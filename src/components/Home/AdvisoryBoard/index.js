@@ -20,7 +20,7 @@ import {
   Leaf,
   FlaskConical,
 } from 'lucide-react';
-import { API_BASE } from '../../../utils/api';
+import { API_BASE, SOCKET_URL } from '../../../utils/api';
 
 // === API ===
 const API_URL = `${API_BASE}/api/advisory-board`;
@@ -178,7 +178,7 @@ const AdvisoryBoard = () => {
 
     // Initialize socket connection for real-time updates
     console.log('🔌 Connecting to Advisory Board Socket.IO (Public)...');
-    const socket = io(API_BASE);
+    const socket = io(SOCKET_URL);
     socketRef.current = socket;
 
     socket.on('connect', () => {

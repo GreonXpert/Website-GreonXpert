@@ -26,7 +26,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import CheckCircle from '@mui/icons-material/CheckCircle';
 import axios from 'axios';
 import io from 'socket.io-client';
-import {API_BASE} from '../../utils/api';
+import { API_BASE, SOCKET_URL } from '../../utils/api';
 
 const API_URL = `${API_BASE}/api`;
 
@@ -686,7 +686,7 @@ const Teams = () => {
 
   // Real-time updates via Socket.IO
   useEffect(() => {
-    const socket = io(API_BASE);
+    const socket = io(SOCKET_URL);
     socket.emit('join-team-room', 'team-public');
 
     socket.on('team-updated', (payload) => {

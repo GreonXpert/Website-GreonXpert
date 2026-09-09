@@ -37,7 +37,7 @@ import { useNavigate } from 'react-router-dom';
 // ✅ Backend Integration Imports
 import io from 'socket.io-client';
 import axios from 'axios';
-import { API_BASE } from '../../../utils/api';
+import { API_BASE, SOCKET_URL } from '../../../utils/api';
 
 // ✅ API Configuration
 const API_URL = `${API_BASE}/api/stories`;
@@ -733,7 +733,7 @@ const SustainabilityStories = () => {
     fetchStories();
 
     // Initialize socket connection
-    const socket = io(API_BASE, {
+    const socket = io(SOCKET_URL, {
       transports: ['websocket'],
       upgrade: true,
       rememberUpgrade: true,
