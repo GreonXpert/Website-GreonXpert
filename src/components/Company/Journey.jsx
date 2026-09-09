@@ -45,7 +45,7 @@ import {
 import axios from 'axios';
 import io from 'socket.io-client';
 import { ImageIcon } from 'lucide-react';
-import { API_BASE } from '../../utils/api';
+import { API_BASE, SOCKET_URL } from '../../utils/api';
 
 // ===== API Configuration =====
 const API_URL = `${API_BASE}/api/journey`;
@@ -1677,7 +1677,7 @@ const Journey = () => {
 
     // Initialize Socket.IO for real-time updates
     console.log('🔌 Connecting to Journey Socket.IO...');
-    const socket = io(API_BASE);
+    const socket = io(SOCKET_URL);
     socketRef.current = socket;
 
     socket.on('connect', () => {

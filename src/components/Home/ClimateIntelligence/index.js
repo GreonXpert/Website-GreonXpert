@@ -39,7 +39,7 @@ import dashboard1 from '../../../assests/Solutions/ZeroCarbon.png';
 import dashboard2 from '../../../assests/Solutions/ESGLink.jpg';
 import dashboard3 from '../../../assests/Solutions/ZeroCarbon/4.png';
 
-import { API_BASE } from '../../../utils/api';
+import { API_BASE, SOCKET_URL } from '../../../utils/api';
 
 // === API ===
 const API_URL = `${API_BASE}/api`;
@@ -822,7 +822,7 @@ const ClimateIntelligence = () => {
     };
     load();
 
-    const socket = io(API_BASE);
+    const socket = io(SOCKET_URL);
     socket.emit('join', 'climateIntelligence');
     socket.on('ci-features-updated', (payload) => {
       if (payload?.success && Array.isArray(payload.data)) {

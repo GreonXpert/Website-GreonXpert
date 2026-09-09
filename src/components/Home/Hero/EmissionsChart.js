@@ -15,7 +15,7 @@ import {
   Legend
 } from 'recharts';
 import emissionService from '../../../services/emissionService'; // Corrected import
-import { API_BASE } from '../../../utils/api';
+import { API_BASE, SOCKET_URL } from '../../../utils/api';
 
 const API_URL = `${API_BASE}`; // Use the imported API_BASE
 
@@ -46,7 +46,7 @@ const EmissionsChart = () => {
     getInitialData();
 
     // 2. Set up Socket.IO for real-time updates
-    const socket = io(API_URL);
+    const socket = io(SOCKET_URL);
 
     // Listen for the 'emissions-updated' event from the server
     socket.on('emissions-updated', (data) => {

@@ -19,7 +19,7 @@ import axios from 'axios';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import ScienceIcon from '@mui/icons-material/Science';
 import PublicIcon from '@mui/icons-material/Public';
-import { API_BASE } from '../../../utils/api';
+import { API_BASE, SOCKET_URL } from '../../../utils/api';
 
 const API_URL = `${API_BASE}/api`;
 
@@ -123,7 +123,7 @@ const PoweredByScience = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     // sockets
-    const socket = io(API_BASE);
+    const socket = io(SOCKET_URL);
     socket.on('pbs-categories-updated', (payload) => {
       if (payload?.success && Array.isArray(payload.data)) {
         setCategories(payload.data);

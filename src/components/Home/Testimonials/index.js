@@ -21,7 +21,7 @@ import {
   Verified as VerifiedIcon,
   Business as BusinessIcon,
 } from '@mui/icons-material';
-import { API_BASE } from '../../../utils/api';
+import { API_BASE, SOCKET_URL } from '../../../utils/api';
 
 /* ===================== API Configuration ===================== */
 const API_URL = API_BASE; // Use the imported API_BASE
@@ -425,7 +425,7 @@ const Testimonials = () => {
     fetchData();
 
     // 2. Set up socket for real-time updates
-    const socket = io(API_URL);
+    const socket = io(SOCKET_URL);
 
     socket.on('connect', () => {
       console.log('Connected to testimonials socket');
